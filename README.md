@@ -1,9 +1,10 @@
 <a name="top"></a>
+<h1>TODO: Cambiar cantidad total de reseñas y promedio de valoración por cantidad de valoraciones para cada una de las 5 estrellas.
 <h3>FeedbackRatingMS v0.14.4</h3>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
-<p>El Microservicio de Valoración de Artículos es el encargado de la administración de las valoraciones a artículos realizadas por los usuarios y de su categorización según las reglas parametrizables.</p>
+<p>El Microservicio de Valoración de Artículos es el encargado de la administración de las valoraciones a artículos realizadas por los usuarios y de su categorización según las reglas parametrizables. Las cuales tienen un rango de 1 a 5.</p>
 <p>Se guardan las valoraciones realizadas y se realiza el cálculo de la valoración promedio para cada artículo.</p>
 <p>Se notifica cuando una valoración cumple alguna de las reglas, explicadas a continuación, y cuando se modifica la valoración promedio del artículo.</p>
 
