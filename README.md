@@ -1,5 +1,5 @@
 <a name="top"></a>
-<h1>FeedbackRatingMS v0.14.2</h1>
+<h1>FeedbackRatingMS v0.14.3</h1>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
@@ -9,7 +9,8 @@ Se notifica cuando una valoración cumple alguna de las reglas, explicadas a con
 
 Las reglas parametrizables son:
 - Si la valoración es mayor a un valor "x", se categoriza como "Buena Valoración"
-- Si la valoración es menor a un valor "y", se categoriza como "Mala Valoración" y se notifica.
+- Si la valoración es menor a un valor "y", se categoriza como "Mala Valoración"
+- Ambas se notifican por RabbitMQ
 
 Para realizar estas acciones, el microservicio se comunica con los siguientes recursos:
 - Auth: Para la administración de los parámetros de las reglas, se debe validar que el usuario sea Admin
