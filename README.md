@@ -1,5 +1,5 @@
 <a name="top"></a>
-<h1>TODO: Cambiar cantidad total de reseñas y promedio de valoración por cantidad de valoraciones para cada una de las 5 estrellas.
+<h1>TODO: Cambiar (cantidad total de reseñas y promedio de valoración) --> (cantidad de valoraciones para cada una de las 5 estrellas y se calcula el total y promedio al guardar)
 <h3>FeedbackRatingMS v0.14.4</h3>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
