@@ -3,9 +3,9 @@
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
-El Microservicio de Valoración de Artículos es el encargado de la administración de las valoraciones realizadas, por los usuarios, a los artículos y de su categorización según las reglas parametrizables.
-Se guardan las valoraciones realizadas, se realiza el cálculo de la valoración promedio para cada artículo.
-Se notifica cuando una valoración cumple alguna de las reglas, explicadas a continuación, y cuando se modifica la valoración promedio del artículo.
+<p>El Microservicio de Valoración de Artículos es el encargado de la administración de las valoraciones a artículos realizadas por los usuarios y de su categorización según las reglas parametrizables.</p>
+<p>Se guardan las valoraciones realizadas y se realiza el cálculo de la valoración promedio para cada artículo.</p>
+<p>Se notifica cuando una valoración cumple alguna de las reglas, explicadas a continuación, y cuando se modifica la valoración promedio del artículo.</p>
 
 Las reglas parametrizables son:
 - Si la valoración es mayor a un valor "x", se categoriza como "Buena Valoración"
