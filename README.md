@@ -1,6 +1,5 @@
 <a name="top"></a>
-<h1>TODO: Cambiar (cantidad total de reseñas y promedio de valoración) --> (cantidad de valoraciones para cada una de las 5 estrellas y se calcula el total y promedio al guardar)
-<h3>FeedbackRatingMS v0.14.4</h3>
+<h3>FeedbackRatingMS v0.14.7</h3>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
@@ -21,8 +20,6 @@ Para realizar estas acciones, el microservicio se comunica con los siguientes re
 
 Y cuenta con las siguientes funcionalidades:
 - [Reglas de Valoración](#rate-params)
-    - [Asignar Parámetro General](#upsert-general-param)
-    - [Buscar Parámetro General](#view-general-param)
     - [Asignar Parámetro a Artículo](#upsert-article-param)
     - [Buscar Parámetro a Artículo](#view-article-param)
 
@@ -43,117 +40,10 @@ Y cuenta con las siguientes funcionalidades:
 
 # <a name='rate-params'></a> Reglas de Valoración
 
-## <a name='upsert-general-param'></a> Asignar Parámetro General
-[Inicio](#top)
-<p>Administración de la categorización por valoración general.</p>
-<p>Estos parámetros se utilizan si no existen los propios del artículo.</p>
-<ul>
-    <li>Si no existe lo crea o, por el contrario, lo actualiza.</li>
-    <li>En el caso de que se asigne un "0", se anularía la regla y no se realizarían las  categorizaciones o notificaciones.</li>
-</ul>
-<h5>URL:</h5>
-<p>POST /v1/rates/rules</p>
-
-### Ejemplos
-Body
-```bash
-{
-    "lowRate": "{bad rate's value}",
-    "highRate": "{good rate's value}"
-}
-```
-Header de Autorización
-```bash
-Authorization=bearer {token}
-```
-### Respuesta de éxito
-Respuesta
-```bash
-# HTTP/1.1 200 OK
-{
-    "lowRate": "{bad rate's value}",
-    "highRate": "{good rate's value}",
-    "created": "{creation date}",
-    "modified": "{modification date}"
-}
-```
-### Respuesta de Error
-401 Unauthorized
-```bash
-# HTTP/1.1 401 Unauthorized
-```
-400 Bad Request
-```bash
-# HTTP/1.1 400 Bad Request
-{
-    "path" : "{property name}",
-    "message" : "{error cause}"
-}
-```
-400 Bad Request
-```bash
-# HTTP/1.1 400 Bad Request
-{
-    "error" : "{error cause}"
-}
-```
-500 Server Error
-```bash
-# HTTP/1.1 500 Server Error
-{
-    "error" : "{error cause}"
-}
-```
-
-## <a name='view-general-param'></a> Buscar Parámetro General
-[Inicio](#top)
-<p>Ver los parámetros generales de categorización por valoración.</p>
-<h5>URL:</h5>
-<p>GET /v1/rates/rules</p>
-
-### Respuesta de éxito
-Respuesta
-```bash
-# HTTP/1.1 200 OK
-{
-    "lowRate": "{bad rate's value}",
-    "highRate": "{good rate's value}",
-    "created": "{creation date}",
-    "modified": "{modification date}"
-}
-```
-### Respuesta de Error
-401 Unauthorized
-```bash
-# HTTP/1.1 401 Unauthorized
-```
-400 Bad Request
-```bash
-# HTTP/1.1 400 Bad Request
-{
-    "path" : "{property name}",
-    "message" : "{error cause}"
-}
-```
-400 Bad Request
-```bash
-# HTTP/1.1 400 Bad Request
-{
-    "error" : "{error cause}"
-}
-```
-500 Server Error
-```bash
-# HTTP/1.1 500 Server Error
-{
-    "error" : "{error cause}"
-}
-```
-
 ## <a name='upsert-article-param'></a> Asignar Parámetro a Artículo
 [Inicio](#top)
 <p>Administración de la categorización por valoración para un artículo específico.</p>
-<p>Si se realizó la asignación de estos valores entonces los parámetros generales no se tienen en cuenta a la hora de categorizar.</p>
+<p>Si no se realiza la asignación de estos valores entonces no se categoriza.</p>
 <ul>
     <li>Si no existe lo crea o, por el contrario, lo actualiza.</li>
     <li>En el caso de que se asigne un "0", se anularía la regla y no se realizarían las  categorizaciones o notificaciones.</li>
@@ -266,7 +156,8 @@ Respuesta
 <p>Ver valoración de un artículo</p>
 <ul>
     <li>Promedio de valoraciones hechas.</li>
-    <li>Cantidad de valoraciones realizadas</li>
+    <li>Cantidad para cada uno de los valores.</li>
+    <li>Cantidad de valoraciones realizadas.</li>
     <li>Clasificación del artículo según la categorización por valoración actual.</li>
 </ul>
 <h5>URL:</h5>
@@ -279,6 +170,11 @@ Respuesta
 {
     "articleId": "{article's id}",
     "rate": "{article rate's value}",
+    "ra1": "{amount of rates with value 1}",
+    "ra2": "{amount of rates with value 2}",
+    "ra3": "{amount of rates with value 3}",
+    "ra4": "{amount of rates with value 4}",
+    "ra5": "{amount of rates with value 5}",
     "feedAmount": "{amount of feedbacks made}",
     "badRate": "{is this category (boolean)}",
     "goodRate": "{is this category (boolean)}",
