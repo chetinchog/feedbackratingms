@@ -4,13 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Check  Verifica estado
 /**
  * @api {get} /v1/ Check
  * @apiName FeedbackRating
- * @apiGroup Server Status
+ * @apiGroup Sistema
  *
- * @apiDescription Verify MicroService Status
+ * @apiDescription Verifica estado del Sistema
  *
  * @apiSuccessExample {json} Response
  *		HTTP/1.1 200 OK

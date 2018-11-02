@@ -1,5 +1,5 @@
 <a name="top"></a>
-<h3>FeedbackRatingMS v0.14.7</h3>
+<h3>FeedbackRatingMS v0.15.4</h3>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
@@ -217,7 +217,7 @@ Respuesta
     <li>Todas las valoraciones realizadas.</li>
 </ul>
 <h5>URL:</h5>
-<p>GET /v1/rates/:articlesd/history</p>
+<p>GET /v1/rates/:articleId/history</p>
 
 ### Respuesta de éxito
 Respuesta
