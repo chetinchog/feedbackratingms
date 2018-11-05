@@ -20,7 +20,7 @@ var config *Configuration
 
 func new() *Configuration {
 	return &Configuration{
-		Port:      3000,
+		Port:      1993,
 		RabbitURL: "amqp://localhost",
 		MongoURL:  "mongodb://localhost:27017",
 		WWWWPath:  "www",
