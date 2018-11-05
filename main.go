@@ -10,7 +10,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/itsjamie/gin-cors"
+	cors "github.com/itsjamie/gin-cors"
 )
 
 func main() {

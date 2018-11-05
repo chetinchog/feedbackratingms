@@ -20,7 +20,7 @@ var config *Configuration
 
 func new() *Configuration {
 	return &Configuration{
-		Port:      1993,
+		Port:      3000,
 		RabbitURL: "amqp://localhost",
 		MongoURL:  "mongodb://localhost:27017",
 		WWWWPath:  "www",
@@ -56,6 +56,6 @@ func Load(fileName string) bool {
 	}
 
 	config = loaded
-	log.Output(1, fmt.Sprintf("%s loaded.", fileName))
+	log.Output(1, fmt.Sprintf("%s cargado correctamente", fileName))
 	return true
 }
