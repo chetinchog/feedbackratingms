@@ -28,7 +28,7 @@ func Get() (*mongo.Database, error) {
 			return nil, err
 		}
 
-		database = client.Database("auth2")
+		database = client.Database("feedbackratingms")
 	}
 	return database, nil
 }

@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"fmt"
+
+	"github.com/chetinchog/feedbackratingms/rules"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,6 +31,24 @@ import (
  *		}
  */
 func SetRules(c *gin.Context) {
+	fmt.Println("SetRules")
+	body := rules.SignUpRequest{}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	ruleService, err := rules.NewService()
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	token, err := ruleService.SignUp(&body)
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
 	c.JSON(200, gin.H{
 		"msg": "SetRules",
 	})

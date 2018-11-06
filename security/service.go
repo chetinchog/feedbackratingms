@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/chetinchog/feedbackratingms/rabbit"
+	"github.com/chetinchog/feedbackratingms/tools/env"
+	"github.com/chetinchog/feedbackratingms/tools/errors"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/mongodb/mongo-go-driver/bson/objectid"
-	"github.com/nmarsollier/authgo/rabbit"
-	"github.com/nmarsollier/authgo/tools/env"
-	"github.com/nmarsollier/authgo/tools/errors"
 )
 
 // Service es la interfaz con los método expuestos por este dao

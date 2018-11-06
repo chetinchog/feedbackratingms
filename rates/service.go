@@ -1,9 +1,9 @@
 package rates
 
 import (
-	"github.com/nmarsollier/authgo/security"
-	"github.com/nmarsollier/authgo/tools/db"
-	"github.com/nmarsollier/authgo/tools/errors"
+	"github.com/chetinchog/feedbackratingms/security"
+	"github.com/chetinchog/feedbackratingms/tools/db"
+	"github.com/chetinchog/feedbackratingms/tools/errors"
 )
 
 type serviceImpl struct {

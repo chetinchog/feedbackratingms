@@ -3,7 +3,7 @@ package security
 import (
 	"time"
 
-	"github.com/nmarsollier/authgo/tools/errors"
+	"github.com/chetinchog/feedbackratingms/tools/errors"
 	gocache "github.com/patrickmn/go-cache"
 )
 
