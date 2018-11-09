@@ -10,8 +10,8 @@ import (
 )
 
 type setRulesRequest struct {
-	LowRate  int    `json:"lowRate"`
-	HighRate string `json:"highRate"`
+	LowRate  int `json:"lowRate"`
+	HighRate int `json:"highRate"`
 }
 
 type setRulesResponse struct {
@@ -49,10 +49,10 @@ func SetRules(c *gin.Context) {
 	fmt.Println("SetRules")
 	body := setRulesRequest{}
 
-	if err := validateAuthentication(c); err != nil {
-		errors.Handle(c, err)
-		return
-	}
+	// if err := validateAuthentication(c); err != nil {
+	// 	errors.Handle(c, err)
+	// 	return
+	// }
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		errors.Handle(c, err)
