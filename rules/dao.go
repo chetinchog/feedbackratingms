@@ -19,13 +19,11 @@ type daoStruct struct {
 type Dao interface {
 	Insert(rule *Rule) (*Rule, error)
 	Update(rule *Rule) (*Rule, error)
-	FindAll() ([]*Rule, error)
 	FindByID(ruleID string) (*Rule, error)
-	FindByLogin(login string) (*Rule, error)
 }
 
 // New dao es interno a este modulo, nadie fuera del modulo tiene acceso
-func newDao() (Dao, error) {
+func GetDao() (Dao, error) {
 	database, err := db.Get()
 	if err != nil {
 		return nil, err
@@ -37,7 +35,7 @@ func newDao() (Dao, error) {
 		context.Background(),
 		mongo.IndexModel{
 			Keys: bson.NewDocument(
-				bson.EC.String("login", ""),
+				bson.EC.String("_id", ""),
 			),
 			Options: bson.NewDocument(
 				bson.EC.Boolean("unique", true),
@@ -71,9 +69,9 @@ func (d daoStruct) Update(rule *Rule) (*Rule, error) {
 		return nil, err
 	}
 
-	rule.Updated = time.Now()
+	rule.Modified = time.Now()
 
-	doc, err := bson.NewDocumentEncoder().EncodeDocument(rule)
+	doc, err := db.EncodeDocument(rule)
 	if err != nil {
 		return nil, err
 	}
@@ -97,33 +95,11 @@ func (d daoStruct) Update(rule *Rule) (*Rule, error) {
 	return rule, nil
 }
 
-// FindAll devuelve todos los usuarios
-func (d daoStruct) FindAll() ([]*Rule, error) {
-	filter := bson.NewDocument()
-	cur, err := d.collection.Find(context.Background(), filter, nil)
-	defer cur.Close(context.Background())
-
-	if err != nil {
-		return nil, err
-	}
-
-	rules := []*Rule{}
-	for cur.Next(context.Background()) {
-		rule := &Rule{}
-		if err := cur.Decode(rule); err != nil {
-			return nil, err
-		}
-		rules = append(rules, rule)
-	}
-
-	return rules, nil
-}
-
 // FindByID lee un usuario desde la db
 func (d daoStruct) FindByID(ruleID string) (*Rule, error) {
 	_id, err := objectid.FromHex(ruleID)
 	if err != nil {
-		return nil, errors.ErrID
+		return nil, err
 	}
 
 	rule := &Rule{}

@@ -2,10 +2,25 @@ package controllers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/chetinchog/feedbackratingms/rules"
+	"github.com/chetinchog/feedbackratingms/tools/errors"
 	"github.com/gin-gonic/gin"
 )
+
+type setRulesRequest struct {
+	LowRate  int    `json:"lowRate"`
+	HighRate string `json:"highRate"`
+}
+
+type setRulesResponse struct {
+	ArticleId string    `json:"articleId"`
+	LowRate   int       `json:"lowRate"`
+	HighRate  int       `json:"highRate"`
+	Created   time.Time `json:"created"`
+	Modified  time.Time `json:"modified"`
+}
 
 /**
  * @api {post} /v1/rates/:articleId/rules Asignar Parámetro a Artículo
@@ -32,26 +47,42 @@ import (
  */
 func SetRules(c *gin.Context) {
 	fmt.Println("SetRules")
-	body := rules.SignUpRequest{}
+	body := setRulesRequest{}
+
+	if err := validateAuthentication(c); err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
 	if err := c.ShouldBindJSON(&body); err != nil {
 		errors.Handle(c, err)
 		return
 	}
 
-	ruleService, err := rules.NewService()
+	rule := rules.NewRule()
+	rule.LowRate = body.LowRate
+	rule.HighRate = body.LowRate
+	rule.ArticleId = c.Param("articleId")
+
+	dao, err := rules.GetDao()
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+	newRule, err := dao.Insert(rule)
 	if err != nil {
 		errors.Handle(c, err)
 		return
 	}
 
-	token, err := ruleService.SignUp(&body)
-	if err != nil {
-		errors.Handle(c, err)
-		return
-	}
-	c.JSON(200, gin.H{
-		"msg": "SetRules",
-	})
+	responseRule := setRulesResponse{}
+	responseRule.ArticleId = newRule.ArticleId
+	responseRule.LowRate = newRule.LowRate
+	responseRule.HighRate = newRule.HighRate
+	responseRule.Created = newRule.Created
+	responseRule.Modified = newRule.Modified
+
+	c.JSON(200, responseRule)
 }
 
 /**

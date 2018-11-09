@@ -7,20 +7,11 @@ import (
 
 // - Algunos errors comunes en el sistema -
 
-// ErrID el id del documento es invalido
-var ErrID = NewValidationField("id", "Invalid")
-
 // Unauthorized el usuario no esta autorizado al recurso
 var Unauthorized = NewCustom(401, "Unauthorized")
 
-// AccessLevel es el error de seguridad, el usuario no esta autorizado para acceder al recurso
-var AccessLevel = NewCustom(401, "Accesos Insuficientes")
-
 // NotFound cuando un registro no se encuentra en la db
 var NotFound = NewCustom(400, "Document not found")
-
-// AlreadyExist cuando no se puede ingresar un registro a la db
-var AlreadyExist = NewCustom(400, "Already exist")
 
 // Internal esta aplicación no sabe como manejar el error
 var Internal = NewCustom(500, "Internal server error")
@@ -29,9 +20,9 @@ var Internal = NewCustom(500, "Internal server error")
 
 // NewValidationField crea un error de validación para un solo campo
 func NewValidationField(field string, err string) Validation {
-	return &ErrValidation{
-		Messages: []ErrField{
-			ErrField{
+	return &errValidation{
+		Messages: []errField{
+			errField{
 				Path:    field,
 				Message: err,
 			},
@@ -41,14 +32,14 @@ func NewValidationField(field string, err string) Validation {
 
 // NewValidation crea un error de validación para un solo campo
 func NewValidation() Validation {
-	return &ErrValidation{
-		Messages: []ErrField{},
+	return &errValidation{
+		Messages: []errField{},
 	}
 }
 
 // NewCustom creates a new errCustom
-func NewCustom(status int, message string) *ErrCustom {
-	return &ErrCustom{
+func NewCustom(status int, message string) Custom {
+	return &errCustom{
 		status:  status,
 		Message: message,
 	}
@@ -62,18 +53,18 @@ type Custom interface {
 	Error() string
 }
 
-// ErrCustom es un error personalizado para http
-type ErrCustom struct {
+// errCustom es un error personalizado para http
+type errCustom struct {
 	status  int
 	Message string `json:"error"`
 }
 
-func (e *ErrCustom) Error() string {
+func (e *errCustom) Error() string {
 	return fmt.Sprintf(e.Message)
 }
 
 // Status http status code
-func (e *ErrCustom) Status() int {
+func (e *errCustom) Status() int {
 	return e.status
 }
 
@@ -85,18 +76,18 @@ type Validation interface {
 	Error() string
 }
 
-// ErrField define un campo inválido. path y mensaje de error
-type ErrField struct {
+// errField define un campo inválido. path y mensaje de error
+type errField struct {
 	Path    string `json:"path"`
 	Message string `json:"message"`
 }
 
 // ErrValidation es un error de validaciones de parameteros o de campos
-type ErrValidation struct {
-	Messages []ErrField `json:"messages"`
+type errValidation struct {
+	Messages []errField `json:"messages"`
 }
 
-func (e *ErrValidation) Error() string {
+func (e *errValidation) Error() string {
 	body, err := json.Marshal(e)
 	if err != nil {
 		return fmt.Sprintf("ErrValidation que no se puede pasar a json.")
@@ -105,8 +96,8 @@ func (e *ErrValidation) Error() string {
 }
 
 // Add agrega errores a un validation error
-func (e *ErrValidation) Add(path string, message string) Validation {
-	err := ErrField{
+func (e *errValidation) Add(path string, message string) Validation {
+	err := errField{
 		Path:    path,
 		Message: message,
 	}
@@ -115,6 +106,6 @@ func (e *ErrValidation) Add(path string, message string) Validation {
 }
 
 // Size devuelve la cantidad de errores
-func (e *ErrValidation) Size() int {
+func (e *errValidation) Size() int {
 	return len(e.Messages)
 }

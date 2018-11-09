@@ -9,22 +9,24 @@ import (
 
 // Configuration properties
 type Configuration struct {
-	Port      int    `json:"port"`
-	RabbitURL string `json:"rabbitUrl"`
-	MongoURL  string `json:"mongoUrl"`
-	WWWWPath  string `json:"wwwPath"`
-	JWTSecret string `json:"jwtSecret"`
+	Port              int    `json:"port"`
+	RabbitURL         string `json:"rabbitUrl"`
+	MongoURL          string `json:"mongoUrl"`
+	SecurityServerURL string `json:"securityServerUrl"`
+	WWWWPath          string `json:"wwwPath"`
+	JWTSecret         string `json:"jwtSecret"`
 }
 
 var config *Configuration
 
 func new() *Configuration {
 	return &Configuration{
-		Port:      1993,
-		RabbitURL: "amqp://localhost",
-		MongoURL:  "mongodb://localhost:27017",
-		WWWWPath:  "www",
-		JWTSecret: "ecb6d3479ac3823f1da7f314d871989b",
+		Port:              3000,
+		RabbitURL:         "amqp://localhost",
+		MongoURL:          "mongodb://localhost:27017",
+		WWWWPath:          "www",
+		SecurityServerURL: "http://localhost:3000",
+		JWTSecret:         "ecb6d3479ac3823f1da7f314d871989b",
 	}
 }
 

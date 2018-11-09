@@ -1,35 +1,17 @@
 package errors
 
 import (
-	"fmt"
-	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mongodb/mongo-go-driver/core/topology"
-	"github.com/mongodb/mongo-go-driver/mongo"
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
 // Handle maneja cualquier error para serializarlo como JSON al cliente
-
-/**
- * @apiDefine AuthHeader
- *
- * @apiExample {String} Header Autorización
- *    Authorization=bearer {token}
- *
- * @apiErrorExample 401 Unauthorized
- *    HTTP/1.1 401 Unauthorized
- *    {
- *       "error" : "Unauthorized"
- *    }
- */
-
 /**
  * @apiDefine OtherErrors
  *
- * @apiErrorExample {json} 500 Server Error
+ * @apiErrorExample 500 Server Error
  *     HTTP/1.1 500 Internal Server Error
  *     {
  *        "error" : "Not Found"
@@ -37,18 +19,6 @@ import (
  *
  */
 func Handle(c *gin.Context, err interface{}) {
-	// Compruebo errores bien conocidos
-	switch err {
-	case topology.ErrServerSelectionTimeout, topology.ErrTopologyClosed:
-		// Errores de conexión con MongoDB
-		db.CheckError(err)
-		handleCustom(c, Internal)
-		return
-	case mongo.ErrNoDocuments:
-		handleCustom(c, NotFound)
-		return
-	}
-
 	// Compruebo tipos de errores conocidos
 	switch value := err.(type) {
 	case Custom:
@@ -60,14 +30,6 @@ func Handle(c *gin.Context, err interface{}) {
 	case validator.ValidationErrors:
 		// Son las validaciones de validator.v9 usadas en validaciones de estructuras
 		handleValidationError(c, value)
-	case mongo.WriteErrors:
-		// Errores de mongo
-		if db.IsUniqueKeyError(value) {
-			handleCustom(c, AlreadyExist)
-		} else {
-			log.Output(1, fmt.Sprintf("Error DB : %s", value.Error()))
-			handleCustom(c, Internal)
-		}
 	case error:
 		// Otros errores
 		c.JSON(500, gin.H{
