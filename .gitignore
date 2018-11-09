@@ -17,3 +17,4 @@ pkg
 www
 vendor
 Gopkg.lock
+gin-bin
