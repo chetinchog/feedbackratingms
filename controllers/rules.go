@@ -22,6 +22,16 @@ type setRulesResponse struct {
 	Modified  time.Time `json:"modified"`
 }
 
+func responseSetRules(c *gin.Context, rule *rules.Rule) {
+	responseRule := setRulesResponse{}
+	responseRule.ArticleId = rule.ArticleId
+	responseRule.LowRate = rule.LowRate
+	responseRule.HighRate = rule.HighRate
+	responseRule.Created = rule.Created
+	responseRule.Modified = rule.Modified
+	c.JSON(200, responseRule)
+}
+
 /**
  * @api {post} /v1/rates/:articleId/rules Asignar Parámetro a Artículo
  * @apiName FeedbackRating
@@ -93,16 +103,6 @@ func SetRules(c *gin.Context) {
 		}
 		responseSetRules(c, newRule)
 	}
-}
-
-func responseSetRules(c *gin.Context, rule *rules.Rule) {
-	responseRule := setRulesResponse{}
-	responseRule.ArticleId = rule.ArticleId
-	responseRule.LowRate = rule.LowRate
-	responseRule.HighRate = rule.HighRate
-	responseRule.Created = rule.Created
-	responseRule.Modified = rule.Modified
-	c.JSON(200, responseRule)
 }
 
 type getRulesResponse struct {
