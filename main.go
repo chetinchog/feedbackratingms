@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	cors "github.com/itsjamie/gin-cors"
 )
 
@@ -19,6 +20,8 @@ func main() {
 	if len(os.Args) > 1 {
 		env.Load(os.Args[1])
 	}
+
+	binding.Validator = new(defaultValidator)
 
 	server := gin.Default()
 	server.Use(gzip.Gzip(gzip.DefaultCompression))
