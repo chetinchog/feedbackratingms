@@ -59,30 +59,58 @@ func SetRules(c *gin.Context) {
 		return
 	}
 
-	rule := rules.NewRule()
-	rule.LowRate = body.LowRate
-	rule.HighRate = body.LowRate
-	rule.ArticleId = c.Param("articleId")
+	articleId := c.Param("articleId")
 
 	dao, err := rules.GetDao()
 	if err != nil {
 		errors.Handle(c, err)
 		return
 	}
-	newRule, err := dao.Insert(rule)
+
+	rule, err := dao.FindByArticleID(articleId)
 	if err != nil {
-		errors.Handle(c, err)
-		return
+		// errors.Handle(c, err)
 	}
 
-	responseRule := setRulesResponse{}
-	responseRule.ArticleId = newRule.ArticleId
-	responseRule.LowRate = newRule.LowRate
-	responseRule.HighRate = newRule.HighRate
-	responseRule.Created = newRule.Created
-	responseRule.Modified = newRule.Modified
+	if rule == nil {
+		rule = rules.NewRule()
+		rule.ArticleId = articleId
+		rule.LowRate = body.LowRate
+		rule.HighRate = body.HighRate
+		newRule, err := dao.Insert(rule)
+		if err != nil {
+			errors.Handle(c, err)
+			return
+		}
+		responseSetRules(c, newRule)
+	} else {
+		rule.LowRate = body.LowRate
+		rule.HighRate = body.HighRate
+		newRule, err := dao.Update(rule)
+		if err != nil {
+			errors.Handle(c, err)
+			return
+		}
+		responseSetRules(c, newRule)
+	}
+}
 
+func responseSetRules(c *gin.Context, rule *rules.Rule) {
+	responseRule := setRulesResponse{}
+	responseRule.ArticleId = rule.ArticleId
+	responseRule.LowRate = rule.LowRate
+	responseRule.HighRate = rule.HighRate
+	responseRule.Created = rule.Created
+	responseRule.Modified = rule.Modified
 	c.JSON(200, responseRule)
+}
+
+type getRulesResponse struct {
+	ArticleId string    `json:"articleId"`
+	LowRate   int       `json:"lowRate"`
+	HighRate  int       `json:"highRate"`
+	Created   time.Time `json:"created"`
+	Modified  time.Time `json:"modified"`
 }
 
 /**
@@ -103,7 +131,25 @@ func SetRules(c *gin.Context) {
  *		}
  */
 func GetRules(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"msg": "GetRules",
-	})
+	articleId := c.Param("articleId")
+
+	dao, err := rules.GetDao()
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	rule, err := dao.FindByArticleID(articleId)
+	if err != nil {
+		// errors.Handle(c, err)
+	}
+
+	responseRule := setRulesResponse{}
+	responseRule.ArticleId = rule.ArticleId
+	responseRule.LowRate = rule.LowRate
+	responseRule.HighRate = rule.HighRate
+	responseRule.Created = rule.Created
+	responseRule.Modified = rule.Modified
+
+	c.JSON(200, responseRule)
 }

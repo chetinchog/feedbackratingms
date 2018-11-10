@@ -2,6 +2,7 @@ package rules
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -20,6 +21,7 @@ type Dao interface {
 	Insert(rule *Rule) (*Rule, error)
 	Update(rule *Rule) (*Rule, error)
 	FindByID(ruleID string) (*Rule, error)
+	FindByArticleID(articleId string) (*Rule, error)
 }
 
 // New dao es interno a este modulo, nadie fuera del modulo tiene acceso
@@ -53,6 +55,8 @@ func GetDao() (Dao, error) {
 }
 
 func (d daoStruct) Insert(rule *Rule) (*Rule, error) {
+	fmt.Println(rule.ID)
+
 	if err := rule.ValidateSchema(); err != nil {
 		return nil, err
 	}
@@ -80,11 +84,12 @@ func (d daoStruct) Update(rule *Rule) (*Rule, error) {
 		bson.NewDocument(doc.LookupElement("_id")),
 		bson.NewDocument(
 			bson.EC.SubDocumentFromElements("$set",
-				doc.LookupElement("password"),
-				doc.LookupElement("name"),
+				doc.LookupElement("articleId"),
+				doc.LookupElement("lowRate"),
+				doc.LookupElement("highRate"),
+				doc.LookupElement("created"),
+				doc.LookupElement("modified"),
 				doc.LookupElement("enabled"),
-				doc.LookupElement("updated"),
-				doc.LookupElement("permissions"),
 			),
 		))
 
@@ -104,7 +109,18 @@ func (d daoStruct) FindByID(ruleID string) (*Rule, error) {
 
 	rule := &Rule{}
 	filter := bson.NewDocument(bson.EC.ObjectID("_id", _id))
-	if err = d.collection.FindOne(context.Background(), filter).Decode(rule); err != nil {
+	if err := d.collection.FindOne(context.Background(), filter).Decode(rule); err != nil {
+		return nil, err
+	}
+
+	return rule, nil
+}
+
+// FindByID lee un usuario desde la db
+func (d daoStruct) FindByArticleID(articleId string) (*Rule, error) {
+	rule := &Rule{}
+	filter := bson.NewDocument(bson.EC.String("articleId", articleId))
+	if err := d.collection.FindOne(context.Background(), filter).Decode(rule); err != nil {
 		return nil, err
 	}
 

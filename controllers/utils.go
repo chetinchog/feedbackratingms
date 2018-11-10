@@ -3,8 +3,8 @@ package controllers
 import (
 	"strings"
 
-	"github.com/CastellanR/UserFeedback-Microservice/security"
-	"github.com/CastellanR/UserFeedback-Microservice/tools/errors"
+	"github.com/chetinchog/feedbackratingms/security"
+	"github.com/chetinchog/feedbackratingms/tools/errors"
 	"github.com/gin-gonic/gin"
 )
 

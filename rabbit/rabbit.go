@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/CastellanR/UserFeedback-Microservice/security"
-	"github.com/CastellanR/UserFeedback-Microservice/tools/env"
-	"github.com/CastellanR/UserFeedback-Microservice/tools/errors"
+	"github.com/chetinchog/feedbackratingms/security"
+	"github.com/chetinchog/feedbackratingms/tools/env"
+	"github.com/chetinchog/feedbackratingms/tools/errors"
 	"github.com/streadway/amqp"
 )
 
@@ -21,8 +21,8 @@ type message struct {
 }
 
 type feedbackParams struct {
-	productID string `json:"productID"`
-	cartID    string `json:"cardID"`
+	ProductID string `json:"productID"`
+	CartID    string `json:"cardID"`
 }
 
 // Init se queda escuchando broadcasts de logout

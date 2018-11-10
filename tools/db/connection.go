@@ -29,7 +29,7 @@ func Get() (*mongo.Database, error) {
 			return nil, err
 		}
 
-		database = client.Database("feedbackDB")
+		database = client.Database("rating")
 	}
 	return database, nil
 }
