@@ -20,6 +20,7 @@ type daoStruct struct {
 type Dao interface {
 	Insert(rate *Rate) (*Rate, error)
 	Update(rate *Rate) (*Rate, error)
+	FindAll() ([]Rate, error)
 	FindByID(rateID string) (*Rate, error)
 	FindByArticleID(articleId string) (*Rate, error)
 }
@@ -37,7 +38,7 @@ func GetDao() (Dao, error) {
 		context.Background(),
 		mongo.IndexModel{
 			Keys: bson.NewDocument(
-				bson.EC.String("_id", ""),
+				bson.EC.String("articleId", ""),
 			),
 			Options: bson.NewDocument(
 				bson.EC.Boolean("unique", true),
@@ -109,6 +110,23 @@ func (d daoStruct) Update(rate *Rate) (*Rate, error) {
 }
 
 // FindByID lee un usuario desde la db
+func (d daoStruct) FindAll() ([]Rate, error) {
+	result, err := d.collection.Find(context.Background(), nil)
+	defer result.Close(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	rates := []Rate{}
+	for result.Next(context.Background()) {
+		rate := Rate{}
+		result.Decode(rate)
+		rates = append(rates, rate)
+	}
+	return rates, nil
+}
+
+// FindByID lee un usuario desde la db
 func (d daoStruct) FindByID(rateID string) (*Rate, error) {
 	_id, err := objectid.FromHex(rateID)
 	if err != nil {
@@ -124,7 +142,7 @@ func (d daoStruct) FindByID(rateID string) (*Rate, error) {
 	return rate, nil
 }
 
-// FindByID lee un usuario desde la db
+// FindByArticleID lee un usuario desde la db filtrando por artículo
 func (d daoStruct) FindByArticleID(articleId string) (*Rate, error) {
 	rate := &Rate{}
 	filter := bson.NewDocument(bson.EC.String("articleId", articleId))

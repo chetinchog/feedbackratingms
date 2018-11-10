@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/chetinchog/feedbackratingms/rates"
@@ -10,7 +11,7 @@ import (
 
 type getRateResponse struct {
 	ArticleId  string    `json:"articleId" validate:"required"`
-	Rate       float32   `json:"rate"`
+	Rate       float64   `json:"rate"`
 	Ra1        int       `json:"ra1"`
 	Ra2        int       `json:"ra2"`
 	Ra3        int       `json:"ra3"`
@@ -21,6 +22,21 @@ type getRateResponse struct {
 	GoodRate   bool      `json:"goodRate" validate:"required"`
 	Created    time.Time `json:"created" validate:"required"`
 	Modified   time.Time `json:"modified" validate:"required"`
+}
+
+func calculateRates(feedRate *rates.Rate) (float64, int) {
+	feedAmount := (feedRate.Ra1 +
+		feedRate.Ra2 +
+		feedRate.Ra3 +
+		feedRate.Ra4 +
+		feedRate.Ra5)
+
+	rate := (float64(feedRate.Ra1)*1 +
+		float64(feedRate.Ra2)*2 +
+		float64(feedRate.Ra3)*3 +
+		float64(feedRate.Ra4)*4 +
+		float64(feedRate.Ra5)*5) / float64(feedAmount)
+	return rate, feedAmount
 }
 
 /**
@@ -65,7 +81,9 @@ func GetRate(c *gin.Context) {
 
 	rate, err := dao.FindByArticleID(articleId)
 	if err != nil {
-		// errors.Handle(c, err)
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
 		if rate == nil {
 			c.JSON(400, gin.H{
 				"error": "Article not rated",
@@ -74,15 +92,17 @@ func GetRate(c *gin.Context) {
 		}
 	}
 
+	feedRate, feedAmount := calculateRates(rate)
+
 	responseRate := getRateResponse{}
 	responseRate.ArticleId = rate.ArticleId
-	responseRate.Rate = rate.Rate
+	responseRate.Rate = feedRate
 	responseRate.Ra1 = rate.Ra1
 	responseRate.Ra2 = rate.Ra2
 	responseRate.Ra3 = rate.Ra3
 	responseRate.Ra4 = rate.Ra4
 	responseRate.Ra5 = rate.Ra5
-	responseRate.FeedAmount = rate.FeedAmount
+	responseRate.FeedAmount = feedAmount
 	responseRate.BadRate = rate.BadRate
 	responseRate.GoodRate = rate.GoodRate
 	responseRate.Created = rate.Created
@@ -141,6 +161,9 @@ func GetHistory(c *gin.Context) {
 	rate, err := dao.FindByArticleID(articleId)
 	if err != nil {
 		// errors.Handle(c, err)
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
 		if rate == nil {
 			c.JSON(400, gin.H{
 				"error": "Article not rated",

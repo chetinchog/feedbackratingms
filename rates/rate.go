@@ -16,39 +16,35 @@ type History struct {
 
 // Rate data structure
 type Rate struct {
-	ID         objectid.ObjectID `bson:"_id"`
-	ArticleId  string            `bson:"articleId" validate:"required"`
-	Rate       float32           `bson:"rate"`
-	Ra1        int               `bson:"ra1"`
-	Ra2        int               `bson:"ra2"`
-	Ra3        int               `bson:"ra3"`
-	Ra4        int               `bson:"ra4"`
-	Ra5        int               `bson:"ra5"`
-	FeedAmount int               `bson:"feedAmount"`
-	BadRate    bool              `bson:"badRate" validate:"required"`
-	GoodRate   bool              `bson:"goodRate" validate:"required"`
-	History    []History         `bson:"history"`
-	Created    time.Time         `bson:"created" validate:"required"`
-	Modified   time.Time         `bson:"modified" validate:"required"`
-	Enabled    bool              `bson:"enabled" validate:"required"`
+	ID        objectid.ObjectID `bson:"_id"`
+	ArticleId string            `bson:"articleId" validate:"required"`
+	Ra1       int               `bson:"ra1" validate:"required"`
+	Ra2       int               `bson:"ra2" validate:"required"`
+	Ra3       int               `bson:"ra3" validate:"required"`
+	Ra4       int               `bson:"ra4" validate:"required"`
+	Ra5       int               `bson:"ra5" validate:"required"`
+	BadRate   bool              `bson:"badRate" validate:"required"`
+	GoodRate  bool              `bson:"goodRate" validate:"required"`
+	History   []*History        `bson:"history"`
+	Created   time.Time         `bson:"created" validate:"required"`
+	Modified  time.Time         `bson:"modified" validate:"required"`
+	Enabled   bool              `bson:"enabled" validate:"required"`
 }
 
 func NewRate() *Rate {
 	return &Rate{
-		ID:         objectid.New(),
-		Rate:       0,
-		Ra1:        0,
-		Ra2:        0,
-		Ra3:        0,
-		Ra4:        0,
-		Ra5:        0,
-		FeedAmount: 0,
-		BadRate:    false,
-		GoodRate:   false,
-		History:    []History{},
-		Created:    time.Now(),
-		Modified:   time.Now(),
-		Enabled:    true,
+		ID:       objectid.New(),
+		Ra1:      0,
+		Ra2:      0,
+		Ra3:      0,
+		Ra4:      0,
+		Ra5:      0,
+		BadRate:  false,
+		GoodRate: false,
+		History:  []*History{},
+		Created:  time.Now(),
+		Modified: time.Now(),
+		Enabled:  true,
 	}
 }
 

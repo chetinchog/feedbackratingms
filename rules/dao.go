@@ -37,7 +37,7 @@ func GetDao() (Dao, error) {
 		context.Background(),
 		mongo.IndexModel{
 			Keys: bson.NewDocument(
-				bson.EC.String("_id", ""),
+				bson.EC.String("articleId", ""),
 			),
 			Options: bson.NewDocument(
 				bson.EC.Boolean("unique", true),

@@ -1,10 +1,15 @@
 package rabbit
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/chetinchog/feedbackratingms/security"
+	"github.com/chetinchog/feedbackratingms/tools/env"
 	"github.com/chetinchog/feedbackratingms/tools/errors"
+	"github.com/streadway/amqp"
 )
 
 // ErrChannelNotInitialized Rabbit channel could not be initialized
@@ -24,7 +29,7 @@ type feedbackParams struct {
 func Init() {
 	go func() {
 		for {
-			// listenLogout()
+			listenLogout()
 			fmt.Println("RabbitMQ: reintentando conexión en 10 segundos...")
 			time.Sleep(10 * time.Second)
 		}
@@ -107,7 +112,6 @@ func listenProductValidation() error {
  *        "message": "{tokenId}"
  *     }
  */
-/*
 func listenLogout() error {
 	conn, err := amqp.Dial(env.Get().RabbitURL)
 	if err != nil {
@@ -189,4 +193,3 @@ func listenLogout() error {
 	return nil
 
 }
-*/
