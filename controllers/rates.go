@@ -1,8 +1,27 @@
 package controllers
 
 import (
+	"time"
+
+	"github.com/chetinchog/feedbackratingms/rates"
+	"github.com/chetinchog/feedbackratingms/tools/errors"
 	"github.com/gin-gonic/gin"
 )
+
+type getRateResponse struct {
+	ArticleId  string    `json:"articleId" validate:"required"`
+	Rate       float32   `json:"rate"`
+	Ra1        int       `json:"ra1"`
+	Ra2        int       `json:"ra2"`
+	Ra3        int       `json:"ra3"`
+	Ra4        int       `json:"ra4"`
+	Ra5        int       `json:"ra5"`
+	FeedAmount int       `json:"feedAmount"`
+	BadRate    bool      `json:"badRate" validate:"required"`
+	GoodRate   bool      `json:"goodRate" validate:"required"`
+	Created    time.Time `json:"created" validate:"required"`
+	Modified   time.Time `json:"modified" validate:"required"`
+}
 
 /**
  * @api {get} /v1/rates/:articleId/ Buscar Valoración de Artículo
@@ -29,9 +48,58 @@ import (
  *		}
  */
 func GetRate(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"msg": "GetRate",
-	})
+	articleId := c.Param("articleId")
+
+	if articleId == "" {
+		c.JSON(400, gin.H{
+			"error": "ArticleId not sended",
+		})
+		return
+	}
+
+	dao, err := rates.GetDao()
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	rate, err := dao.FindByArticleID(articleId)
+	if err != nil {
+		// errors.Handle(c, err)
+		if rate == nil {
+			c.JSON(400, gin.H{
+				"error": "Article not rated",
+			})
+			return
+		}
+	}
+
+	responseRate := getRateResponse{}
+	responseRate.ArticleId = rate.ArticleId
+	responseRate.Rate = rate.Rate
+	responseRate.Ra1 = rate.Ra1
+	responseRate.Ra2 = rate.Ra2
+	responseRate.Ra3 = rate.Ra3
+	responseRate.Ra4 = rate.Ra4
+	responseRate.Ra5 = rate.Ra5
+	responseRate.FeedAmount = rate.FeedAmount
+	responseRate.BadRate = rate.BadRate
+	responseRate.GoodRate = rate.GoodRate
+	responseRate.Created = rate.Created
+	responseRate.Modified = rate.Modified
+
+	c.JSON(200, responseRate)
+}
+
+type getHistoryResponseArray struct {
+	Rate    int       `json:"rate" validate:"required"`
+	UserId  string    `json:"userId" validate:"required"`
+	Created time.Time `json:"created" validate:"required"`
+}
+
+type getHistoryResponse struct {
+	ArticleId string                    `json:"articleId" validate:"required"`
+	History   []getHistoryResponseArray `json:"history"`
 }
 
 /**
@@ -44,7 +112,7 @@ func GetRate(c *gin.Context) {
  * @apiSuccessExample {json} Response
  *		HTTP/1.1 200 OK
  *		{
- *			"id": "{article's id}",
+ *			"articleId": "{article's id}",
  *			"history": [
  *			    {
  *			        "rate": "{rate's value}",
@@ -55,7 +123,45 @@ func GetRate(c *gin.Context) {
  *		}
  */
 func GetHistory(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"msg": "GetHistory",
-	})
+	articleId := c.Param("articleId")
+
+	if articleId == "" {
+		c.JSON(400, gin.H{
+			"error": "ArticleId not sended",
+		})
+		return
+	}
+
+	dao, err := rates.GetDao()
+	if err != nil {
+		errors.Handle(c, err)
+		return
+	}
+
+	rate, err := dao.FindByArticleID(articleId)
+	if err != nil {
+		// errors.Handle(c, err)
+		if rate == nil {
+			c.JSON(400, gin.H{
+				"error": "Article not rated",
+			})
+			return
+		}
+	}
+
+	responseHistory := getHistoryResponse{}
+	responseHistory.ArticleId = rate.ArticleId
+
+	historyArray := []getHistoryResponseArray{}
+	for _, history := range historyArray {
+		newHistory := getHistoryResponseArray{}
+		newHistory.Rate = history.Rate
+		newHistory.UserId = history.UserId
+		newHistory.Created = history.Created
+		historyArray = append(historyArray, newHistory)
+	}
+
+	responseHistory.History = historyArray
+
+	c.JSON(200, responseHistory)
 }

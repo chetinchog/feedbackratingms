@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/chetinchog/feedbackratingms/rules"
@@ -56,20 +55,24 @@ func responseSetRules(c *gin.Context, rule *rules.Rule) {
  *		}
  */
 func SetRules(c *gin.Context) {
-	fmt.Println("SetRules")
-	body := setRulesRequest{}
-
 	// if err := validateAuthentication(c); err != nil {
 	// 	errors.Handle(c, err)
 	// 	return
 	// }
 
+	articleId := c.Param("articleId")
+	if articleId == "" {
+		c.JSON(400, gin.H{
+			"error": "ArticleId not sended",
+		})
+		return
+	}
+
+	body := setRulesRequest{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		errors.Handle(c, err)
 		return
 	}
-
-	articleId := c.Param("articleId")
 
 	dao, err := rules.GetDao()
 	if err != nil {
@@ -131,7 +134,19 @@ type getRulesResponse struct {
  *		}
  */
 func GetRules(c *gin.Context) {
+	// if err := validateAuthentication(c); err != nil {
+	// 	errors.Handle(c, err)
+	// 	return
+	// }
+
 	articleId := c.Param("articleId")
+
+	if articleId == "" {
+		c.JSON(400, gin.H{
+			"error": "ArticleId not sended",
+		})
+		return
+	}
 
 	dao, err := rules.GetDao()
 	if err != nil {
@@ -142,6 +157,12 @@ func GetRules(c *gin.Context) {
 	rule, err := dao.FindByArticleID(articleId)
 	if err != nil {
 		// errors.Handle(c, err)
+		if rule == nil {
+			c.JSON(400, gin.H{
+				"error": "Article without rule",
+			})
+			return
+		}
 	}
 
 	responseRule := setRulesResponse{}

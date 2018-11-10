@@ -2,9 +2,11 @@ package rates
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/chetinchog/feedbackratingms/tools/db"
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/objectid"
 	"github.com/mongodb/mongo-go-driver/mongo"
@@ -18,13 +20,12 @@ type daoStruct struct {
 type Dao interface {
 	Insert(rate *Rate) (*Rate, error)
 	Update(rate *Rate) (*Rate, error)
-	FindAll() ([]*Rate, error)
 	FindByID(rateID string) (*Rate, error)
-	FindByLogin(login string) (*Rate, error)
+	FindByArticleID(articleId string) (*Rate, error)
 }
 
 // New dao es interno a este modulo, nadie fuera del modulo tiene acceso
-func newDao() (Dao, error) {
+func GetDao() (Dao, error) {
 	database, err := db.Get()
 	if err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func newDao() (Dao, error) {
 		context.Background(),
 		mongo.IndexModel{
 			Keys: bson.NewDocument(
-				bson.EC.String("login", ""),
+				bson.EC.String("_id", ""),
 			),
 			Options: bson.NewDocument(
 				bson.EC.Boolean("unique", true),
@@ -53,14 +54,9 @@ func newDao() (Dao, error) {
 	}, nil
 }
 
-// MockedDao sirve para poder mockear el db.Collection y testear el modulo
-func MockedDao(coll db.Collection) Dao {
-	return daoStruct{
-		collection: coll,
-	}
-}
-
 func (d daoStruct) Insert(rate *Rate) (*Rate, error) {
+	fmt.Println(rate.ID)
+
 	if err := rate.ValidateSchema(); err != nil {
 		return nil, err
 	}
@@ -77,9 +73,9 @@ func (d daoStruct) Update(rate *Rate) (*Rate, error) {
 		return nil, err
 	}
 
-	rate.Updated = time.Now()
+	rate.Modified = time.Now()
 
-	doc, err := bson.NewDocumentEncoder().EncodeDocument(rate)
+	doc, err := db.EncodeDocument(rate)
 	if err != nil {
 		return nil, err
 	}
@@ -88,11 +84,20 @@ func (d daoStruct) Update(rate *Rate) (*Rate, error) {
 		bson.NewDocument(doc.LookupElement("_id")),
 		bson.NewDocument(
 			bson.EC.SubDocumentFromElements("$set",
-				doc.LookupElement("password"),
-				doc.LookupElement("name"),
+				doc.LookupElement("articleId"),
+				doc.LookupElement("rate"),
+				doc.LookupElement("ra1"),
+				doc.LookupElement("ra2"),
+				doc.LookupElement("ra3"),
+				doc.LookupElement("ra4"),
+				doc.LookupElement("ra5"),
+				doc.LookupElement("feedAmount"),
+				doc.LookupElement("badRate"),
+				doc.LookupElement("goodRate"),
+				doc.LookupElement("history"),
+				doc.LookupElement("created"),
+				doc.LookupElement("modified"),
 				doc.LookupElement("enabled"),
-				doc.LookupElement("updated"),
-				doc.LookupElement("permissions"),
 			),
 		))
 
@@ -103,53 +108,27 @@ func (d daoStruct) Update(rate *Rate) (*Rate, error) {
 	return rate, nil
 }
 
-// FindAll devuelve todos los usuarios
-func (d daoStruct) FindAll() ([]*Rate, error) {
-	filter := bson.NewDocument()
-	cur, err := d.collection.Find(context.Background(), filter, nil)
-	defer cur.Close(context.Background())
-
-	if err != nil {
-		return nil, err
-	}
-
-	rates := []*Rate{}
-	for cur.Next(context.Background()) {
-		rate := &Rate{}
-		if err := cur.Decode(rate); err != nil {
-			return nil, err
-		}
-		rates = append(rates, rate)
-	}
-
-	return rates, nil
-}
-
 // FindByID lee un usuario desde la db
 func (d daoStruct) FindByID(rateID string) (*Rate, error) {
 	_id, err := objectid.FromHex(rateID)
 	if err != nil {
-		return nil, errors.ErrID
+		return nil, err
 	}
 
 	rate := &Rate{}
 	filter := bson.NewDocument(bson.EC.ObjectID("_id", _id))
-	if err = d.collection.FindOne(context.Background(), filter).Decode(rate); err != nil {
+	if err := d.collection.FindOne(context.Background(), filter).Decode(rate); err != nil {
 		return nil, err
 	}
 
 	return rate, nil
 }
 
-// FindByLogin lee un usuario desde la db
-func (d daoStruct) FindByLogin(login string) (*Rate, error) {
+// FindByID lee un usuario desde la db
+func (d daoStruct) FindByArticleID(articleId string) (*Rate, error) {
 	rate := &Rate{}
-	filter := bson.NewDocument(bson.EC.String("login", login))
-	err := d.collection.FindOne(context.Background(), filter).Decode(rate)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, ErrLogin
-		}
+	filter := bson.NewDocument(bson.EC.String("articleId", articleId))
+	if err := d.collection.FindOne(context.Background(), filter).Decode(rate); err != nil {
 		return nil, err
 	}
 

@@ -1,5 +1,5 @@
 <a name="top"></a>
-<h3>FeedbackRatingMS v1.2.6</h3>
+<h3>FeedbackRatingMS v1.5.4</h3>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
@@ -224,7 +224,7 @@ Respuesta
 ```bash
 # HTTP/1.1 200 OK
 {
-    "id": "{article's id}",
+    "articleId": "{article's id}",
     "history": [
         {
             "rate": "{rate's value}",
