@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/chetinchog/feedbackratingms/rabbit"
 	"github.com/chetinchog/feedbackratingms/routes"
 	"github.com/chetinchog/feedbackratingms/tools/env"
 	"github.com/gin-contrib/gzip"
@@ -20,6 +21,8 @@ func main() {
 	if len(os.Args) > 1 {
 		env.Load(os.Args[1])
 	}
+
+	rabbit.Init()
 
 	binding.Validator = new(defaultValidator)
 

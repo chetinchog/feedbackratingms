@@ -1,5 +1,5 @@
 <a name="top"></a>
-<h3>FeedbackRatingMS v1.5.1</h3>
+<h3>FeedbackRatingMS v1.6.1</h3>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
