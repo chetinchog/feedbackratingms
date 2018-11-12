@@ -173,7 +173,7 @@ func listenLogout() error {
 		return err
 	}
 
-	fmt.Println("RabbitMQ conectado")
+	fmt.Println("RabbitMQ: Listening Logout")
 
 	go func() {
 		for d := range mgs {

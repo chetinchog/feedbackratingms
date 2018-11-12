@@ -1,5 +1,5 @@
 <a name="top"></a>
-<h3>FeedbackRatingMS v1.7.9</h3>
+<h3>FeedbackRatingMS v1.7.10</h3>
 
 # <a name='ms'></a> Microservicio de Valoración de Artículos
 
@@ -314,8 +314,8 @@ Mensaje
 Mensaje
 ```bash
 {
-  "type": "article-exist",
-  "message" : "tokenId"
+   "type": "logout",
+   "message": "{tokenId}"
 }
 ```
 
