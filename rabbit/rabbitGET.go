@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/chetinchog/feedbackratingms/controllers"
 	"github.com/chetinchog/feedbackratingms/security"
 	"github.com/chetinchog/feedbackratingms/tools/env"
 	"github.com/chetinchog/feedbackratingms/tools/errors"
@@ -20,23 +21,24 @@ type message struct {
 	Message string `json:"message"`
 }
 
-type feedbackParams struct {
-	ProductID string `json:"productID"`
-	CartID    string `json:"cardID"`
-}
-
 // Init se queda escuchando broadcasts de logout
 func Init() {
 	go func() {
 		for {
-			listenNewFeedback()
+			err := listenNewFeedback()
+			if err != nil {
+				fmt.Println(err)
+			}
 			fmt.Println("RabbitMQ: Listen New Feedback -> Reconnect in 5...")
 			time.Sleep(5 * time.Second)
 		}
 	}()
 	go func() {
 		for {
-			listenLogout()
+			err := listenLogout()
+			if err != nil {
+				fmt.Println(err)
+			}
 			fmt.Println("RabbitMQ: Listen Logout -> Reconnect in 5...")
 			time.Sleep(5 * time.Second)
 		}
@@ -88,9 +90,9 @@ func listenNewFeedback() error {
 
 	queue, err := chn.QueueDeclare(
 		"feedback", // name
-		false,      // durable
+		true,       // durable
 		false,      // delete when usused
-		true,       // exclusive
+		false,      // exclusive
 		false,      // no-wait
 		nil,        // arguments
 	)
@@ -100,7 +102,7 @@ func listenNewFeedback() error {
 
 	err = chn.QueueBind(
 		queue.Name,       // queue name
-		"feedback",       // routing key
+		"",               // routing key
 		"feedback_topic", // exchange
 		false,
 		nil)
@@ -130,7 +132,7 @@ func listenNewFeedback() error {
 			if err == nil {
 				if newMessage.Type == "new-feedback" {
 					log.Output(1, "RabbitMQ: New Feedback Message")
-					fmt.Println(newMessage)
+					controllers.NewFeedback(newMessage.Message)
 				}
 			}
 		}
@@ -245,7 +247,7 @@ func listenLogout() error {
 		"auth", // name
 		false,  // durable
 		false,  // delete when unused
-		true,   // exclusive
+		false,  // exclusive
 		false,  // no-wait
 		nil,    // arguments
 	)

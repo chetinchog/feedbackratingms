@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -176,7 +177,7 @@ func GetHistory(c *gin.Context) {
 	responseHistory.ArticleId = rate.ArticleId
 
 	historyArray := []getHistoryResponseArray{}
-	for _, history := range historyArray {
+	for _, history := range rate.History {
 		newHistory := getHistoryResponseArray{}
 		newHistory.Rate = history.Rate
 		newHistory.UserId = history.UserId
@@ -187,4 +188,106 @@ func GetHistory(c *gin.Context) {
 	responseHistory.History = historyArray
 
 	c.JSON(200, responseHistory)
+}
+
+type Feedback struct {
+	UserID    string `json:"userId" binding:"required"`
+	Text      string `json:"text" binding:"required"`
+	ProductID string `json:"productId" binding:"required"`
+	Rate      int    `json:"rate" binding:"required"`
+}
+
+func NewFeedback(feed string) {
+	fmt.Println(feed)
+
+	newFeed := Feedback{}
+
+	err := json.Unmarshal([]byte(feed), newFeed)
+	if err != nil {
+		return
+	}
+
+	dao, err := rates.GetDao()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	articleId := newFeed.ProductID
+
+	rate, err := dao.FindByArticleID(articleId)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	userIdNF := newFeed.UserID
+	rateNF := newFeed.Rate
+	if rate == nil {
+		rate = rates.NewRate()
+		rate.ArticleId = articleId
+
+		newHistory := rates.NewHistory()
+		newHistory.Rate = rateNF
+		newHistory.UserId = userIdNF
+		rate.History = append(rate.History, newHistory)
+
+		switch rateNF {
+		case 1:
+			rate.Ra1++
+			break
+		case 2:
+			rate.Ra2++
+			break
+		case 3:
+			rate.Ra3++
+			break
+		case 4:
+			rate.Ra4++
+			break
+		case 5:
+			rate.Ra5++
+			break
+		default:
+			return
+		}
+
+		newRule, err := dao.Insert(rate)
+		if err != nil || newRule == nil {
+			fmt.Println(err)
+			return
+		}
+	} else {
+
+		newHistory := rates.NewHistory()
+		newHistory.Rate = rateNF
+		newHistory.UserId = userIdNF
+		rate.History = append(rate.History, newHistory)
+
+		switch rateNF {
+		case 1:
+			rate.Ra1++
+			break
+		case 2:
+			rate.Ra2++
+			break
+		case 3:
+			rate.Ra3++
+			break
+		case 4:
+			rate.Ra4++
+			break
+		case 5:
+			rate.Ra5++
+			break
+		default:
+			return
+		}
+
+		newRule, err := dao.Update(rate)
+		if err != nil || newRule == nil {
+			fmt.Println(err)
+			return
+		}
+	}
 }

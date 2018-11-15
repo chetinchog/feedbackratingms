@@ -48,6 +48,14 @@ func NewRate() *Rate {
 	}
 }
 
+func NewHistory() *History {
+	return &History{
+		Created: time.Now(),
+		Rate:    0,
+		UserId:  "",
+	}
+}
+
 var ErrData = errors.NewValidationField("rule", "invalid")
 
 func (e *Rate) ValidateSchema() error {
