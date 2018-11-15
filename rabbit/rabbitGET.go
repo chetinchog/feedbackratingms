@@ -29,18 +29,123 @@ type feedbackParams struct {
 func Init() {
 	go func() {
 		for {
+			listenNewFeedback()
+			fmt.Println("RabbitMQ: Listen New Feedback -> Reconnect in 5...")
+			time.Sleep(5 * time.Second)
+		}
+	}()
+	go func() {
+		for {
 			listenLogout()
-			fmt.Println("RabbitMQ: reintentando conexión en 10 segundos...")
-			time.Sleep(10 * time.Second)
+			fmt.Println("RabbitMQ: Listen Logout -> Reconnect in 5...")
+			time.Sleep(5 * time.Second)
 		}
 	}()
 }
 
 /**
- * @api {direct} feedback/article-validation Product Validation
+ * @api {direct} feedback/new-feedback Buscar Reseña
  * @apiGroup RabbitMQ GET
  *
- * @apiDescription Listen validation product messages from cart.
+ * @apiDescription Escucha los mensajes de creación de Feedback para obtener las valoraciones
+ *
+ * @apiSuccessExample {json} Message
+ * 		{
+ *    		"type": "new-feedback",
+ *    		"message": {
+ *        		"id" : "{feedback's id}"
+*      		 	"idUser" : "{user's id}",
+ *        		"idProduct" : "{product's id}",
+ *        		"rate" : "{feedback's rate}",
+ *        		"created" : "{creation date}",
+ *        		"modified" : "{modification date}"
+ *    		}
+ *		}
+*/
+func listenNewFeedback() error {
+
+	conn, err := amqp.Dial(env.Get().RabbitURL)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	chn, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer chn.Close()
+
+	err = chn.ExchangeDeclare(
+		"feedback_topic", // name
+		"topic",          // type
+		true,             // durable
+		false,            // auto-deleted
+		false,            // internal
+		false,            // no-wait
+		nil,              // arguments
+	)
+
+	queue, err := chn.QueueDeclare(
+		"feedback", // name
+		false,      // durable
+		false,      // delete when usused
+		true,       // exclusive
+		false,      // no-wait
+		nil,        // arguments
+	)
+	if err != nil {
+		return err
+	}
+
+	err = chn.QueueBind(
+		queue.Name,       // queue name
+		"feedback",       // routing key
+		"feedback_topic", // exchange
+		false,
+		nil)
+	if err != nil {
+		return err
+	}
+
+	msgs, err := chn.Consume(
+		queue.Name, // queue
+		"",         // consumer
+		true,       // auto ack
+		false,      // exclusive
+		false,      // no local
+		false,      // no wait
+		nil,        // args
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("RabbitMQ: Listening New Feedback")
+
+	go func() {
+		for d := range msgs {
+			newMessage := &message{}
+			err = json.Unmarshal(d.Body, newMessage)
+			if err == nil {
+				if newMessage.Type == "new-feedback" {
+					log.Output(1, "RabbitMQ: New Feedback Message")
+					fmt.Println(newMessage)
+				}
+			}
+		}
+	}()
+
+	fmt.Print("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
+
+	return nil
+}
+
+/**
+ * @api {direct} feedback/article-validation Buscar Validación de Artículo
+ * @apiGroup RabbitMQ GET
+ *
+ * @apiDescription Listen validation product messages from catalog.
  *
  * @apiSuccessExample {json} Message
  * 		{
@@ -48,11 +153,10 @@ func Init() {
  *			"message" :
  *				{
  *					"articleId": "{articleId}",
- *					"valid": True|False
+ *					"valid": true|false
  *				}
  *      }
  */
-/*
 func listenProductValidation() error {
 	conn, err := amqp.Dial(env.Get().RabbitURL)
 	if err != nil {
@@ -98,13 +202,12 @@ func listenProductValidation() error {
 
 	return nil
 }
-*/
 
 /**
  * @api {fanout} auth/logout Logout de Usuarios
  * @apiGroup RabbitMQ GET
  *
- * @apiDescription Escucha de Messages logout desde auth.
+ * @apiDescription Escucha de mensajes de logout desde auth.
  *
  * @apiSuccessExample {json} Message
  *     {
@@ -191,5 +294,4 @@ func listenLogout() error {
 	fmt.Print("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
 
 	return nil
-
 }
