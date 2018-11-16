@@ -55,10 +55,10 @@ func responseSetRules(c *gin.Context, rule *rules.Rule) {
  *		}
  */
 func SetRules(c *gin.Context) {
-	// if err := validateAuthentication(c); err != nil {
-	// 	errors.Handle(c, err)
-	// 	return
-	// }
+	if err := validateAuthentication(c); err != nil {
+		errors.Handle(c, err)
+		return
+	}
 
 	articleId := c.Param("articleId")
 	if articleId == "" {
@@ -134,10 +134,10 @@ type getRulesResponse struct {
  *		}
  */
 func GetRules(c *gin.Context) {
-	// if err := validateAuthentication(c); err != nil {
-	// 	errors.Handle(c, err)
-	// 	return
-	// }
+	if err := validateAuthentication(c); err != nil {
+		errors.Handle(c, err)
+		return
+	}
 
 	articleId := c.Param("articleId")
 

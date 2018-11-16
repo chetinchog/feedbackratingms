@@ -2,7 +2,6 @@ package rates
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -56,8 +55,6 @@ func GetDao() (Dao, error) {
 }
 
 func (d daoStruct) Insert(rate *Rate) (*Rate, error) {
-	fmt.Println(rate.ID)
-
 	if err := rate.ValidateSchema(); err != nil {
 		return nil, err
 	}
@@ -81,20 +78,48 @@ func (d daoStruct) Update(rate *Rate) (*Rate, error) {
 		return nil, err
 	}
 
+	ra1 := doc.LookupElement("ra1")
+	if ra1 == nil {
+		ra1 = bson.EC.Int32("ra1", 0)
+	}
+	ra2 := doc.LookupElement("ra2")
+	if ra2 == nil {
+		ra2 = bson.EC.Int32("ra2", 0)
+	}
+	ra3 := doc.LookupElement("ra3")
+	if ra3 == nil {
+		ra3 = bson.EC.Int32("ra3", 0)
+	}
+	ra4 := doc.LookupElement("ra4")
+	if ra4 == nil {
+		ra4 = bson.EC.Int32("ra4", 0)
+	}
+	ra5 := doc.LookupElement("ra5")
+	if ra5 == nil {
+		ra5 = bson.EC.Int32("ra5", 0)
+	}
+
+	badRate := doc.LookupElement("badRate")
+	if badRate == nil {
+		badRate = bson.EC.Boolean("badRate", false)
+	}
+	goodRate := doc.LookupElement("goodRate")
+	if goodRate == nil {
+		goodRate = bson.EC.Boolean("goodRate", false)
+	}
+
 	_, err = d.collection.UpdateOne(context.Background(),
 		bson.NewDocument(doc.LookupElement("_id")),
 		bson.NewDocument(
 			bson.EC.SubDocumentFromElements("$set",
 				doc.LookupElement("articleId"),
-				doc.LookupElement("rate"),
-				doc.LookupElement("ra1"),
-				doc.LookupElement("ra2"),
-				doc.LookupElement("ra3"),
-				doc.LookupElement("ra4"),
-				doc.LookupElement("ra5"),
-				doc.LookupElement("feedAmount"),
-				doc.LookupElement("badRate"),
-				doc.LookupElement("goodRate"),
+				ra1,
+				ra2,
+				ra3,
+				ra4,
+				ra5,
+				badRate,
+				goodRate,
 				doc.LookupElement("history"),
 				doc.LookupElement("created"),
 				doc.LookupElement("modified"),

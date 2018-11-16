@@ -58,7 +58,7 @@ func getRemote(token string) (*User, error) {
 	if err != nil {
 		return nil, errors.Unauthorized
 	}
-	req.Header.Add("Authorization", "bearer "+token)
+	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil || resp.StatusCode != 200 {
 		return nil, errors.Unauthorized

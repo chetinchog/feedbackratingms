@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/chetinchog/feedbackratingms/rates"
+	"github.com/chetinchog/feedbackratingms/rules"
 	"github.com/chetinchog/feedbackratingms/tools/errors"
 	"github.com/gin-gonic/gin"
 )
@@ -197,19 +198,82 @@ type Feedback struct {
 	Rate      int    `json:"rate" binding:"required"`
 }
 
-func NewFeedback(feed string) {
-	fmt.Println(feed)
+func addRate(rate *rates.Rate, rateNF int) *rates.Rate {
+	switch rateNF {
+	case 1:
+		rate.Ra1++
+		break
+	case 2:
+		rate.Ra2++
+		break
+	case 3:
+		rate.Ra3++
+		break
+	case 4:
+		rate.Ra4++
+		break
+	case 5:
+		rate.Ra5++
+		break
+	default:
+	}
+	return rate
+}
 
-	newFeed := Feedback{}
+func classify(rate *rates.Rate) *rates.Rate {
+	prom, amount := calculateRates(rate)
+	if amount == 0 {
+	}
+
+	dao, err := rules.GetDao()
+	if err != nil {
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
+		return rate
+	}
+
+	articleId := rate.ArticleId
+
+	rule, err := dao.FindByArticleID(articleId)
+	if err != nil {
+	}
+
+	if rule == nil {
+		return rate
+	}
+
+	if prom <= float64(rule.LowRate) {
+		rate.BadRate = true
+	} else {
+		rate.BadRate = false
+	}
+	if prom >= float64(rule.HighRate) {
+		rate.GoodRate = true
+	} else {
+		rate.GoodRate = false
+	}
+
+	return rate
+}
+
+func NewFeedback(feed string) {
+
+	newFeed := &Feedback{}
 
 	err := json.Unmarshal([]byte(feed), newFeed)
 	if err != nil {
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
 		return
 	}
 
 	dao, err := rates.GetDao()
 	if err != nil {
+		fmt.Println(" ---------------------------- ")
 		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
 		return
 	}
 
@@ -217,8 +281,6 @@ func NewFeedback(feed string) {
 
 	rate, err := dao.FindByArticleID(articleId)
 	if err != nil {
-		fmt.Println(err)
-		return
 	}
 
 	userIdNF := newFeed.UserID
@@ -232,29 +294,14 @@ func NewFeedback(feed string) {
 		newHistory.UserId = userIdNF
 		rate.History = append(rate.History, newHistory)
 
-		switch rateNF {
-		case 1:
-			rate.Ra1++
-			break
-		case 2:
-			rate.Ra2++
-			break
-		case 3:
-			rate.Ra3++
-			break
-		case 4:
-			rate.Ra4++
-			break
-		case 5:
-			rate.Ra5++
-			break
-		default:
-			return
-		}
+		rate = addRate(rate, rateNF)
+		rate = classify(rate)
 
 		newRule, err := dao.Insert(rate)
 		if err != nil || newRule == nil {
+			fmt.Println(" ---------------------------- ")
 			fmt.Println(err)
+			fmt.Println(" ---------------------------- ")
 			return
 		}
 	} else {
@@ -264,29 +311,14 @@ func NewFeedback(feed string) {
 		newHistory.UserId = userIdNF
 		rate.History = append(rate.History, newHistory)
 
-		switch rateNF {
-		case 1:
-			rate.Ra1++
-			break
-		case 2:
-			rate.Ra2++
-			break
-		case 3:
-			rate.Ra3++
-			break
-		case 4:
-			rate.Ra4++
-			break
-		case 5:
-			rate.Ra5++
-			break
-		default:
-			return
-		}
+		rate = addRate(rate, rateNF)
+		rate = classify(rate)
 
 		newRule, err := dao.Update(rate)
 		if err != nil || newRule == nil {
+			fmt.Println(" ---------------------------- ")
 			fmt.Println(err)
+			fmt.Println(" ---------------------------- ")
 			return
 		}
 	}

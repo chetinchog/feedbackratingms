@@ -18,14 +18,14 @@ type History struct {
 type Rate struct {
 	ID        objectid.ObjectID `bson:"_id"`
 	ArticleId string            `bson:"articleId" validate:"required"`
-	Ra1       int               `bson:"ra1" validate:"required"`
-	Ra2       int               `bson:"ra2" validate:"required"`
-	Ra3       int               `bson:"ra3" validate:"required"`
-	Ra4       int               `bson:"ra4" validate:"required"`
-	Ra5       int               `bson:"ra5" validate:"required"`
-	BadRate   bool              `bson:"badRate" validate:"required"`
-	GoodRate  bool              `bson:"goodRate" validate:"required"`
-	History   []*History        `bson:"history"`
+	Ra1       int               `bson:"ra1"`
+	Ra2       int               `bson:"ra2"`
+	Ra3       int               `bson:"ra3"`
+	Ra4       int               `bson:"ra4"`
+	Ra5       int               `bson:"ra5"`
+	BadRate   bool              `bson:"badRate"`
+	GoodRate  bool              `bson:"goodRate"`
+	History   []*History        `bson:"history" validate:"required"`
 	Created   time.Time         `bson:"created" validate:"required"`
 	Modified  time.Time         `bson:"modified" validate:"required"`
 	Enabled   bool              `bson:"enabled" validate:"required"`
