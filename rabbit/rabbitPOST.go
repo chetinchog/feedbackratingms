@@ -1,5 +1,14 @@
 package rabbit
 
+import (
+	"github.com/chetinchog/feedbackratingms/tools/env"
+	"github.com/streadway/amqp"
+)
+
+type productParams struct {
+	ProductId string `json:"productId" binding:"required"`
+}
+
 /**
  * @api {direct} cart/article-exist Product Validation
  * @apiGroup RabbitMQ POST
@@ -17,8 +26,7 @@ package rabbit
 			}
 		}
 */
-/*
-func ProductValidation(productID string, cartID string) error {
+func ProductValidation(productId string, cartID string) error {
 	conn, err := amqp.Dial(env.Get().RabbitURL)
 	if err != nil {
 		return err
@@ -43,9 +51,8 @@ func ProductValidation(productID string, cartID string) error {
 		return err
 	}
 
-	msg := feedbackParams{}
-	msg.cartID = cartID
-	msg.productID = productID
+	msg := productParams{}
+	msg.ProductId = productId
 
 	err = chn.Publish(
 		"",         // exchange
@@ -65,7 +72,6 @@ func ProductValidation(productID string, cartID string) error {
 
 	return err
 }
-*/
 
 /**
  * @api {fanout} feedback/ Send Feedback

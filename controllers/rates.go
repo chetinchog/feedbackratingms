@@ -194,7 +194,7 @@ func GetHistory(c *gin.Context) {
 type Feedback struct {
 	UserID    string `json:"userId" binding:"required"`
 	Text      string `json:"text" binding:"required"`
-	ProductID string `json:"productId" binding:"required"`
+	ProductId string `json:"productId" binding:"required"`
 	Rate      int    `json:"rate" binding:"required"`
 }
 
@@ -277,7 +277,7 @@ func NewFeedback(feed string) {
 		return
 	}
 
-	articleId := newFeed.ProductID
+	articleId := newFeed.ProductId
 
 	rate, err := dao.FindByArticleID(articleId)
 	if err != nil {
