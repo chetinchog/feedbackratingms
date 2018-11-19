@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/chetinchog/feedbackratingms/security"
@@ -24,7 +23,6 @@ func validateAuthentication(c *gin.Context) error {
 		return errors.Unauthorized
 	}
 
-	fmt.Println(tokenString)
 	if _, err = security.Validate(tokenString); err != nil {
 		return errors.Unauthorized
 	}

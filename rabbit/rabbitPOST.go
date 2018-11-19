@@ -25,6 +25,7 @@ type productParams struct {
  *	   "queue": "rates"
  *	   "message": {
  *	        "articleId" : "{article's id}",
+ *	        "userId" : "{user's id}",
  *	        "rate": "{article rate's value}",
  *	    }
  *	}
@@ -105,6 +106,8 @@ func HighRate(rateMessage string) error {
 		return err
 	}
 
+	fmt.Println("RabbitMQ: Buena Calificación")
+
 	return nil
 }
 
@@ -120,6 +123,7 @@ func HighRate(rateMessage string) error {
  *	   "queue": "rates"
  *	   "message": {
  *	        "articleId" : "{article's id}",
+ *	        "userId" : "{user's id}",
  *	        "rate": "{article rate's value}",
  *	    }
  *	}
@@ -200,7 +204,7 @@ func LowRate(rateMessage string) error {
 		return err
 	}
 
-	fmt.Println("Buena Calificación")
+	fmt.Println("RabbitMQ: Mala Calificación")
 
 	return nil
 }
@@ -298,7 +302,7 @@ func RateChange(rateMessage string) error {
 		return err
 	}
 
-	fmt.Println("Mala Calificación")
+	fmt.Println("RabbitMQ: Cambio de Rating")
 
 	return nil
 }
@@ -386,7 +390,7 @@ func ProductValidation(articleId string, feedbackID objectid.ObjectID) error {
 		return err
 	}
 
-	fmt.Println("Envio de validación")
+	fmt.Println("RabbitMQ: Envio de validación")
 
 	return nil
 }

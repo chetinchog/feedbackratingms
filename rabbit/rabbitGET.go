@@ -8,6 +8,7 @@ import (
 
 	"github.com/chetinchog/feedbackratingms/controllers"
 	"github.com/chetinchog/feedbackratingms/rates"
+	"github.com/chetinchog/feedbackratingms/rules"
 	"github.com/chetinchog/feedbackratingms/security"
 	"github.com/chetinchog/feedbackratingms/tools/env"
 	"github.com/chetinchog/feedbackratingms/tools/errors"
@@ -36,8 +37,14 @@ type response struct {
 }
 
 type messageValidation struct {
-	ArticleId string `json:"articleId"`
-	Valid     bool   `json:"valid"`
+	ArticleId   string `json:"articleId"`
+	ReferenceId string `json:"referenceId"`
+	Valid       bool   `json:"valid"`
+}
+
+type responseValidation struct {
+	Type    string            `json:"type"`
+	Message messageValidation `json:"message"`
 }
 
 type msgRateChange struct {
@@ -46,9 +53,10 @@ type msgRateChange struct {
 	FeedAmount int     `json:"feedAmount"`
 }
 
-type msgClasification struct {
-	ArticleId string  `json:"articleId"`
-	Rate      float64 `json:"rate"`
+type MsgClasification struct {
+	ArticleId string `json:"articleId"`
+	UserId    string `json:"userId"`
+	Rate      int    `json:"rate"`
 }
 
 // Init se queda escuchando broadcasts de logout
@@ -264,8 +272,14 @@ func listenProductValidation() error {
 
 	for d := range msg {
 		log.Printf("Received a message Validation Product: %s", d.Body)
-		newMessage := &message{}
-		err = json.Unmarshal(d.Body, newMessage)
+		newMessage := &responseValidation{}
+		err = json.Unmarshal([]byte(d.Body), newMessage)
+		if err != nil {
+			fmt.Println("----------------------------")
+			fmt.Println(err)
+			fmt.Println("----------------------------")
+			return err
+		}
 		ValidateProduct(newMessage.Message)
 	}
 
@@ -404,6 +418,9 @@ func NewFeedback(feed string) {
 
 		rate = fn.AddRate(rate, rateNF)
 		rate = fn.Classify(rate)
+
+		NotifyClass(articleId, rateNF, userIdNF)
+
 		rate.Enabled = false
 
 		if err := ProductValidation(newFeed.ArticleId, newFeed.ID); err != nil {
@@ -427,6 +444,12 @@ func NewFeedback(feed string) {
 		rate = fn.AddRate(rate, rateNF)
 		rate = fn.Classify(rate)
 
+		NotifyClass(articleId, rateNF, userIdNF)
+
+		if err := ProductValidation(newFeed.ArticleId, newFeed.ID); err != nil {
+			return
+		}
+
 		newRule, err := dao.Update(rate)
 		if err != nil || newRule == nil {
 			fmt.Println(" ---------------------------- ")
@@ -437,15 +460,7 @@ func NewFeedback(feed string) {
 	}
 }
 
-func ValidateProduct(validation string) {
-	newMessage := &messageValidation{}
-	err := json.Unmarshal([]byte(validation), newMessage)
-	if err != nil {
-		fmt.Println(" ---------------------------- ")
-		fmt.Println(err)
-		fmt.Println(" ---------------------------- ")
-		return
-	}
+func ValidateProduct(newMessage messageValidation) {
 
 	dao, err := rates.GetDao()
 	if err != nil {
@@ -478,22 +493,43 @@ func ValidateProduct(validation string) {
 			}
 			RateChange(string(rateMsg[:]))
 
-			msgRateClass := &msgClasification{
-				ArticleId: articleId,
-				Rate:      rating,
-			}
-			rateClassMsg, err := json.Marshal(msgRateClass)
-			if err != nil {
-				return
-			}
-			if rate.GoodRate == true {
-				HighRate(string(rateClassMsg[:]))
-			} else if rate.BadRate == true {
-				LowRate(string(rateClassMsg[:]))
-			}
-
 		} else {
 			err = dao.DisableByArticleId(articleId)
 		}
+	}
+}
+
+func NotifyClass(articleId string, rateNF int, userId string) {
+	msgRateClass := &MsgClasification{
+		ArticleId: articleId,
+		Rate:      rateNF,
+		UserId:    userId,
+	}
+	rateClassMsg, err := json.Marshal(msgRateClass)
+	if err != nil {
+		return
+	}
+
+	dao, err := rules.GetDao()
+	if err != nil {
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
+		return
+	}
+
+	rule, err := dao.FindByArticleID(articleId)
+	if err != nil {
+	}
+
+	if rule == nil {
+		return
+	}
+
+	if rateNF <= rule.LowRate {
+		LowRate(string(rateClassMsg[:]))
+	}
+	if rateNF >= rule.HighRate {
+		HighRate(string(rateClassMsg[:]))
 	}
 }

@@ -28,7 +28,7 @@ type Rate struct {
 	History   []*History        `bson:"history" validate:"required"`
 	Created   time.Time         `bson:"created" validate:"required"`
 	Modified  time.Time         `bson:"modified" validate:"required"`
-	Enabled   bool              `bson:"enabled" validate:"required"`
+	Enabled   bool              `bson:"enabled"`
 }
 
 func NewRate() *Rate {
