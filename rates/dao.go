@@ -22,6 +22,10 @@ type Dao interface {
 	FindAll() ([]Rate, error)
 	FindByID(rateID string) (*Rate, error)
 	FindByArticleID(articleId string) (*Rate, error)
+	Disable(_id objectid.ObjectID) error
+	DisableByArticleId(articleId string) error
+	Enable(_id objectid.ObjectID) error
+	EnableByArticleId(articleId string) error
 }
 
 // New dao es interno a este modulo, nadie fuera del modulo tiene acceso
@@ -123,7 +127,7 @@ func (d daoStruct) Update(rate *Rate) (*Rate, error) {
 				doc.LookupElement("history"),
 				doc.LookupElement("created"),
 				doc.LookupElement("modified"),
-				doc.LookupElement("enabled"),
+				bson.EC.Boolean("enabled", true),
 			),
 		))
 
@@ -176,4 +180,60 @@ func (d daoStruct) FindByArticleID(articleId string) (*Rate, error) {
 	}
 
 	return rate, nil
+}
+
+func (d daoStruct) Disable(_id objectid.ObjectID) error {
+	_, err := d.collection.UpdateOne(context.Background(),
+		bson.NewDocument(bson.EC.ObjectID("_id", _id)),
+		bson.NewDocument(
+			bson.EC.SubDocumentFromElements("$set",
+				bson.EC.Boolean("enabled", false),
+			),
+		))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d daoStruct) DisableByArticleId(articleId string) error {
+	_, err := d.collection.UpdateOne(context.Background(),
+		bson.NewDocument(bson.EC.String("articleId", articleId)),
+		bson.NewDocument(
+			bson.EC.SubDocumentFromElements("$set",
+				bson.EC.Boolean("enabled", false),
+			),
+		))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d daoStruct) Enable(_id objectid.ObjectID) error {
+	_, err := d.collection.UpdateOne(context.Background(),
+		bson.NewDocument(bson.EC.ObjectID("_id", _id)),
+		bson.NewDocument(
+			bson.EC.SubDocumentFromElements("$set",
+				bson.EC.Boolean("enabled", true),
+			),
+		))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d daoStruct) EnableByArticleId(articleId string) error {
+	_, err := d.collection.UpdateOne(context.Background(),
+		bson.NewDocument(bson.EC.String("articleId", articleId)),
+		bson.NewDocument(
+			bson.EC.SubDocumentFromElements("$set",
+				bson.EC.Boolean("enabled", true),
+			),
+		))
+	if err != nil {
+		return err
+	}
+	return nil
 }

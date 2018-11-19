@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/chetinchog/feedbackratingms/rates"
-	"github.com/chetinchog/feedbackratingms/rules"
 	"github.com/chetinchog/feedbackratingms/tools/errors"
+	"github.com/chetinchog/feedbackratingms/tools/fn"
 	"github.com/gin-gonic/gin"
+	"github.com/mongodb/mongo-go-driver/bson/objectid"
 )
 
 type getRateResponse struct {
@@ -24,21 +24,6 @@ type getRateResponse struct {
 	GoodRate   bool      `json:"goodRate" validate:"required"`
 	Created    time.Time `json:"created" validate:"required"`
 	Modified   time.Time `json:"modified" validate:"required"`
-}
-
-func calculateRates(feedRate *rates.Rate) (float64, int) {
-	feedAmount := (feedRate.Ra1 +
-		feedRate.Ra2 +
-		feedRate.Ra3 +
-		feedRate.Ra4 +
-		feedRate.Ra5)
-
-	rate := (float64(feedRate.Ra1)*1 +
-		float64(feedRate.Ra2)*2 +
-		float64(feedRate.Ra3)*3 +
-		float64(feedRate.Ra4)*4 +
-		float64(feedRate.Ra5)*5) / float64(feedAmount)
-	return rate, feedAmount
 }
 
 /**
@@ -94,7 +79,7 @@ func GetRate(c *gin.Context) {
 		}
 	}
 
-	feedRate, feedAmount := calculateRates(rate)
+	feedRate, feedAmount := fn.CalculateRates(rate)
 
 	responseRate := getRateResponse{}
 	responseRate.ArticleId = rate.ArticleId
@@ -192,134 +177,12 @@ func GetHistory(c *gin.Context) {
 }
 
 type Feedback struct {
-	UserID    string `json:"userId" binding:"required"`
-	Text      string `json:"text" binding:"required"`
-	ProductId string `json:"productId" binding:"required"`
-	Rate      int    `json:"rate" binding:"required"`
-}
-
-func addRate(rate *rates.Rate, rateNF int) *rates.Rate {
-	switch rateNF {
-	case 1:
-		rate.Ra1++
-		break
-	case 2:
-		rate.Ra2++
-		break
-	case 3:
-		rate.Ra3++
-		break
-	case 4:
-		rate.Ra4++
-		break
-	case 5:
-		rate.Ra5++
-		break
-	default:
-	}
-	return rate
-}
-
-func classify(rate *rates.Rate) *rates.Rate {
-	prom, amount := calculateRates(rate)
-	if amount == 0 {
-	}
-
-	dao, err := rules.GetDao()
-	if err != nil {
-		fmt.Println(" ---------------------------- ")
-		fmt.Println(err)
-		fmt.Println(" ---------------------------- ")
-		return rate
-	}
-
-	articleId := rate.ArticleId
-
-	rule, err := dao.FindByArticleID(articleId)
-	if err != nil {
-	}
-
-	if rule == nil {
-		return rate
-	}
-
-	if prom <= float64(rule.LowRate) {
-		rate.BadRate = true
-	} else {
-		rate.BadRate = false
-	}
-	if prom >= float64(rule.HighRate) {
-		rate.GoodRate = true
-	} else {
-		rate.GoodRate = false
-	}
-
-	return rate
-}
-
-func NewFeedback(feed string) {
-
-	newFeed := &Feedback{}
-
-	err := json.Unmarshal([]byte(feed), newFeed)
-	if err != nil {
-		fmt.Println(" ---------------------------- ")
-		fmt.Println(err)
-		fmt.Println(" ---------------------------- ")
-		return
-	}
-
-	dao, err := rates.GetDao()
-	if err != nil {
-		fmt.Println(" ---------------------------- ")
-		fmt.Println(err)
-		fmt.Println(" ---------------------------- ")
-		return
-	}
-
-	articleId := newFeed.ProductId
-
-	rate, err := dao.FindByArticleID(articleId)
-	if err != nil {
-	}
-
-	userIdNF := newFeed.UserID
-	rateNF := newFeed.Rate
-	if rate == nil {
-		rate = rates.NewRate()
-		rate.ArticleId = articleId
-
-		newHistory := rates.NewHistory()
-		newHistory.Rate = rateNF
-		newHistory.UserId = userIdNF
-		rate.History = append(rate.History, newHistory)
-
-		rate = addRate(rate, rateNF)
-		rate = classify(rate)
-
-		newRule, err := dao.Insert(rate)
-		if err != nil || newRule == nil {
-			fmt.Println(" ---------------------------- ")
-			fmt.Println(err)
-			fmt.Println(" ---------------------------- ")
-			return
-		}
-	} else {
-
-		newHistory := rates.NewHistory()
-		newHistory.Rate = rateNF
-		newHistory.UserId = userIdNF
-		rate.History = append(rate.History, newHistory)
-
-		rate = addRate(rate, rateNF)
-		rate = classify(rate)
-
-		newRule, err := dao.Update(rate)
-		if err != nil || newRule == nil {
-			fmt.Println(" ---------------------------- ")
-			fmt.Println(err)
-			fmt.Println(" ---------------------------- ")
-			return
-		}
-	}
+	ID        objectid.ObjectID `json:"_id"`
+	UserID    string            `json:"userId"`
+	Text      string            `json:"text"`
+	ArticleId string            `json:"productId"`
+	Rate      int               `json:"rate" `
+	Moderated bool              `json:"moderated"`
+	Created   time.Time         `json:"created"`
+	Updated   time.Time         `json:"updated"`
 }

@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/chetinchog/feedbackratingms/controllers"
+	"github.com/chetinchog/feedbackratingms/rates"
 	"github.com/chetinchog/feedbackratingms/security"
 	"github.com/chetinchog/feedbackratingms/tools/env"
 	"github.com/chetinchog/feedbackratingms/tools/errors"
+	"github.com/chetinchog/feedbackratingms/tools/fn"
 	"github.com/streadway/amqp"
 )
 
@@ -19,6 +21,34 @@ var ErrChannelNotInitialized = errors.NewCustom(400, "Channel not initialized")
 type message struct {
 	Type    string `json:"type"`
 	Message string `json:"message"`
+}
+
+type msj struct {
+	FeedbackID string `json:"referenceId"`
+	ArticleId  string `json:"articleId"`
+}
+
+type response struct {
+	Type     string `json:"type"`
+	Exchange string `json:"exchange"`
+	Queue    string `json:"queue"`
+	Message  msj    `json:"message"`
+}
+
+type messageValidation struct {
+	ArticleId string `json:"articleId"`
+	Valid     bool   `json:"valid"`
+}
+
+type msgRateChange struct {
+	ArticleId  string  `json:"articleId"`
+	NewRate    float64 `json:"newRate"`
+	FeedAmount int     `json:"feedAmount"`
+}
+
+type msgClasification struct {
+	ArticleId string  `json:"articleId"`
+	Rate      float64 `json:"rate"`
 }
 
 // Init se queda escuchando broadcasts de logout
@@ -43,6 +73,16 @@ func Init() {
 			time.Sleep(5 * time.Second)
 		}
 	}()
+	go func() {
+		for {
+			err := listenProductValidation()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println("RabbitMQ: Listen Product Validation -> Reconnect in 5...")
+			time.Sleep(5 * time.Second)
+		}
+	}()
 }
 
 /**
@@ -56,14 +96,14 @@ func Init() {
  *    		"type": "new-feedback",
  *    		"message": {
  *        		"id" : "{feedback's id}"
-*      		 	"idUser" : "{user's id}",
+ *      		 	"idUser" : "{user's id}",
  *        		"idProduct" : "{product's id}",
  *        		"rate" : "{feedback's rate}",
  *        		"created" : "{creation date}",
  *        		"modified" : "{modification date}"
  *    		}
  *		}
-*/
+ */
 func listenNewFeedback() error {
 
 	conn, err := amqp.Dial(env.Get().RabbitURL)
@@ -132,7 +172,7 @@ func listenNewFeedback() error {
 			if err == nil {
 				if newMessage.Type == "new-feedback" {
 					log.Output(1, "RabbitMQ: New Feedback Message")
-					controllers.NewFeedback(newMessage.Message)
+					NewFeedback(newMessage.Message)
 				}
 			}
 		}
@@ -172,14 +212,36 @@ func listenProductValidation() error {
 	}
 	defer chn.Close()
 
-	queue, err := chn.QueueDeclare(
-		"catalog", // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+	err = chn.ExchangeDeclare(
+		"rating-article", // name
+		"direct",         // type
+		false,            // durable
+		false,            // auto-deleted
+		false,            // internal
+		false,            // no-wait
+		nil,              // arguments
 	)
+
+	queue, err := chn.QueueDeclare(
+		"rating-article", // name
+		false,            // durable
+		false,            // delete when unused
+		false,            // exclusive
+		false,            // no-wait
+		nil,              // arguments
+	)
+
+	if err != nil {
+		return err
+	}
+
+	err = chn.QueueBind(
+		queue.Name,       // queue name
+		"",               // routing key
+		"rating-article", // exchange
+		false,
+		nil)
+
 	if err != nil {
 		return err
 	}
@@ -198,8 +260,13 @@ func listenProductValidation() error {
 		return err
 	}
 
+	fmt.Println("RabbitMQ: Listening Product Validation")
+
 	for d := range msg {
-		log.Printf("Received a message: %s", d.Body)
+		log.Printf("Received a message Validation Product: %s", d.Body)
+		newMessage := &message{}
+		err = json.Unmarshal(d.Body, newMessage)
+		ValidateProduct(newMessage.Message)
 	}
 
 	return nil
@@ -296,4 +363,137 @@ func listenLogout() error {
 	fmt.Print("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
 
 	return nil
+}
+
+func NewFeedback(feed string) {
+
+	newFeed := &controllers.Feedback{}
+
+	err := json.Unmarshal([]byte(feed), newFeed)
+	if err != nil {
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
+		return
+	}
+
+	dao, err := rates.GetDao()
+	if err != nil {
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
+		return
+	}
+
+	articleId := newFeed.ArticleId
+
+	rate, err := dao.FindByArticleID(articleId)
+	if err != nil {
+	}
+
+	userIdNF := newFeed.UserID
+	rateNF := newFeed.Rate
+	if rate == nil {
+		rate = rates.NewRate()
+		rate.ArticleId = articleId
+
+		newHistory := rates.NewHistory()
+		newHistory.Rate = rateNF
+		newHistory.UserId = userIdNF
+		rate.History = append(rate.History, newHistory)
+
+		rate = fn.AddRate(rate, rateNF)
+		rate = fn.Classify(rate)
+		rate.Enabled = false
+
+		if err := ProductValidation(newFeed.ArticleId, newFeed.ID); err != nil {
+			return
+		}
+
+		newRule, err := dao.Insert(rate)
+		if err != nil || newRule == nil {
+			fmt.Println(" ---------------------------- ")
+			fmt.Println(err)
+			fmt.Println(" ---------------------------- ")
+			return
+		}
+	} else {
+
+		newHistory := rates.NewHistory()
+		newHistory.Rate = rateNF
+		newHistory.UserId = userIdNF
+		rate.History = append(rate.History, newHistory)
+
+		rate = fn.AddRate(rate, rateNF)
+		rate = fn.Classify(rate)
+
+		newRule, err := dao.Update(rate)
+		if err != nil || newRule == nil {
+			fmt.Println(" ---------------------------- ")
+			fmt.Println(err)
+			fmt.Println(" ---------------------------- ")
+			return
+		}
+	}
+}
+
+func ValidateProduct(validation string) {
+	newMessage := &messageValidation{}
+	err := json.Unmarshal([]byte(validation), newMessage)
+	if err != nil {
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
+		return
+	}
+
+	dao, err := rates.GetDao()
+	if err != nil {
+		fmt.Println(" ---------------------------- ")
+		fmt.Println(err)
+		fmt.Println(" ---------------------------- ")
+		return
+	}
+
+	articleId := newMessage.ArticleId
+
+	rate, err := dao.FindByArticleID(articleId)
+	if err != nil {
+	}
+
+	if rate != nil {
+		if newMessage.Valid == true {
+			err = dao.EnableByArticleId(articleId)
+
+			rating, amount := fn.CalculateRates(rate)
+
+			msgRate := &msgRateChange{
+				ArticleId:  articleId,
+				NewRate:    rating,
+				FeedAmount: amount,
+			}
+			rateMsg, err := json.Marshal(msgRate)
+			if err != nil {
+				return
+			}
+			RateChange(string(rateMsg[:]))
+
+			msgRateClass := &msgClasification{
+				ArticleId: articleId,
+				Rate:      rating,
+			}
+			rateClassMsg, err := json.Marshal(msgRateClass)
+			if err != nil {
+				return
+			}
+			if rate.GoodRate == true {
+				HighRate(string(rateClassMsg[:]))
+			} else if rate.BadRate == true {
+				LowRate(string(rateClassMsg[:]))
+			}
+
+		} else {
+			err = dao.DisableByArticleId(articleId)
+		}
+	}
 }
