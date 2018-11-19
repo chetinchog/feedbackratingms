@@ -3,6 +3,17 @@
 
 FeedbackRatingMS Manager
 
+- [RabbitMQ_GET](#rabbitmq_get)
+	- [Buscar Validación de Artículo](#buscar-validación-de-artículo)
+	- [Buscar Reseña](#buscar-reseña)
+	- [Logout de Usuarios](#logout-de-usuarios)
+	
+- [RabbitMQ_POST](#rabbitmq_post)
+	- [Product Validation](#product-validation)
+	- [Notificación de cambio de Valoración de Artículo](#notificación-de-cambio-de-valoración-de-artículo)
+	- [Notificación de Valoración Alta](#notificación-de-valoración-alta)
+	- [Alerta de Valoración Baja](#alerta-de-valoración-baja)
+	
 - [Reglas_de_Valoraci_n](#reglas_de_valoraci_n)
 	- [Asignar Parámetro a Artículo](#asignar-parámetro-a-artículo)
 	
@@ -10,8 +21,204 @@ FeedbackRatingMS Manager
 	- [Check](#check)
 	
 - [Valoraci_n](#valoraci_n)
-	- [Buscar Valoración de Artículo](#buscar-valoración-de-artículo)
+	- [Buscar Historial de Artículo](#buscar-historial-de-artículo)
 	
+
+
+# <a name='rabbitmq_get'></a> RabbitMQ_GET
+
+## <a name='buscar-validación-de-artículo'></a> Buscar Validación de Artículo
+[Back to top](#top)
+
+<p>Listen validation product messages from catalog.</p>
+
+	DIRECT feedback/article-validation
+
+
+
+
+
+### Success Response
+
+Message
+
+```
+		{
+     	"type": "article-exist",
+			"message" :
+				{
+					"articleId": "{articleId}",
+					"valid": true|false
+				}
+     }
+```
+
+
+## <a name='buscar-reseña'></a> Buscar Reseña
+[Back to top](#top)
+
+<p>Escucha los mensajes de creación de Feedback para obtener las valoraciones</p>
+
+	DIRECT feedback/new-feedback
+
+
+
+
+
+### Success Response
+
+Message
+
+```
+		{
+   		"type": "new-feedback",
+   		"message": {
+       		"id" : "{feedback's id}"
+     		 	"idUser" : "{user's id}",
+       		"idProduct" : "{product's id}",
+       		"rate" : "{feedback's rate}",
+       		"created" : "{creation date}",
+       		"modified" : "{modification date}"
+   		}
+		}
+```
+
+
+## <a name='logout-de-usuarios'></a> Logout de Usuarios
+[Back to top](#top)
+
+<p>Escucha de mensajes de logout desde auth.</p>
+
+	FANOUT auth/logout
+
+
+
+
+
+### Success Response
+
+Message
+
+```
+{
+   "type": "logout",
+   "message": "{tokenId}"
+}
+```
+
+
+# <a name='rabbitmq_post'></a> RabbitMQ_POST
+
+## <a name='product-validation'></a> Product Validation
+[Back to top](#top)
+
+<p>Sending a validation request for a product.</p>
+
+	DIRECT cart/article-exist
+
+
+
+
+
+### Success Response
+
+Message
+
+```
+    {
+			"type": "article-exist",
+			"queue": "catalog",
+			"exchange": "",
+			"message" : {
+				"referenceId": "{referenceId}",
+            	"articleId": "{articleId}",
+			}
+		}
+```
+
+
+## <a name='notificación-de-cambio-de-valoración-de-artículo'></a> Notificación de cambio de Valoración de Artículo
+[Back to top](#top)
+
+<p>Se notifica cada vez que cambia el promedio de la valoración de un artículo.</p>
+
+	TOPIC rates/article-change-rate
+
+
+
+
+
+### Success Response
+
+Message
+
+```
+{
+   "type": "article-change-rate",
+   "queue": "rates"
+   "message": {
+        "articleId": "{article's id}",
+        "newRate": "{article rate's value}",
+        "feedAmount": "{amount of califications}"
+    }
+}
+```
+
+
+## <a name='notificación-de-valoración-alta'></a> Notificación de Valoración Alta
+[Back to top](#top)
+
+<p>Si una reseña supera la regla de una buena valoración, se notifica.</p>
+
+	TOPIC rates/high-rate
+
+
+
+
+
+### Success Response
+
+Message
+
+```
+{
+   "type": "high-rate",
+   "queue": "rates"
+   "message": {
+        "articleId" : "{article's id}",
+        "userId" : "{user's id}",
+        "rate": "{article rate's value}",
+    }
+}
+```
+
+
+## <a name='alerta-de-valoración-baja'></a> Alerta de Valoración Baja
+[Back to top](#top)
+
+<p>Si una reseña supera la regla de una mala valoración, se genera una alerta.</p>
+
+	TOPIC rates/low-rate
+
+
+
+
+
+### Success Response
+
+Message
+
+```
+{
+   "type": "low-rate",
+   "queue": "rates"
+   "message": {
+        "articleId" : "{article's id}",
+        "userId" : "{user's id}",
+        "rate": "{article rate's value}",
+    }
+}
+```
 
 
 # <a name='reglas_de_valoraci_n'></a> Reglas_de_Valoraci_n
@@ -80,12 +287,12 @@ HTTP/1.1 200 OK
 
 # <a name='valoraci_n'></a> Valoraci_n
 
-## <a name='buscar-valoración-de-artículo'></a> Buscar Valoración de Artículo
+## <a name='buscar-historial-de-artículo'></a> Buscar Historial de Artículo
 [Back to top](#top)
 
 <p>ABM Reglas</p>
 
-	GET /v1/rates/:articleId/
+	GET /v1/rates/:articlesd/history
 
 
 
@@ -99,17 +306,13 @@ Response
 HTTP/1.1 200 OK
 {
 	"articleId": "{article's id}",
-	"rate": "{article rate's value}",
-	"ra1": "{amount of rates with value 1}",
-	"ra2": "{amount of rates with value 2}",
-	"ra3": "{amount of rates with value 3}",
-	"ra4": "{amount of rates with value 4}",
-	"ra5": "{amount of rates with value 5}",
-	"feedAmount": "{amount of feedbacks made}",
-	"badRate": "{is this category (boolean)}",
-	"goodRate": "{is this category (boolean)}",
-	"created": "{creation date}",
-	"modified": "{modification date}"
+	"history": [
+	    {
+	        "rate": "{rate's value}",
+	        "userId": "{user's id}",
+	        "created": "{creation date}"
+	    }
+	]
 }
 ```
 
