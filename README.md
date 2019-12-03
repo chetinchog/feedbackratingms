@@ -1,7 +1,7 @@
 <a name="top"></a>
 <h3>FeedbackRatingMS v1.15.7</h3>
 
-# <a name='ms'></a> Microservicio de Valoración de Artículos
+# <a name='ms'></a> Microservicio de Valoración de Artículos - Golang
 
 <p>El Microservicio de Valoración de Artículos es el encargado de la administración de las valoraciones a artículos realizadas por los usuarios y de su categorización según las reglas parametrizables. Las cuales tienen un rango de 1 a 5.</p>
 <p>Se guardan las valoraciones realizadas y se realiza el cálculo de la valoración promedio para cada artículo.</p>
